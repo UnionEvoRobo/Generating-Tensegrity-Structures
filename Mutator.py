@@ -1,142 +1,107 @@
 """Mutator class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
 
-import graphviz  #doctest: +NO_EXE
-dot = graphviz.Digraph(comment='Tensegrity Object Graph')
-dot
+from Edge import Edge
+from Node import Node
 
 class Mutator:
 
     def __init__(self):
-
         self.rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
-        self.c_rule="C>D"        #this and self.d_rule have been left as separate variables 
-        self.d_rule="D>C{d}D"    #for the convenience of the final 'if' statement in the self.mutating() 
-        self.new_edges={}
         self.node_index=0
 
     def mutating(self, main):
-        """Main functions of the mutator. Excluding the return statement, 
-        the last three lines are temporary to properly output the graph 
-        in the paper.
+        """Controls all operations of the mutator class.
 
-        Parameters
-        ---
-        main: object
-            -oject from the Main class
-
-        Returns
-        ---
-        self.new_edges: dictionary
-            -a dictionary containing all edges created through mutation of the 
-            input dictionary from main (main.edge_dict)
+        Args:
+            main (object): oject of the Main class
         """
-        count_dict={'A':1, 'B':1, 'C':1, 'D':1, 'E':1, }
-        self.new_edges={}
-        for i in main.edge_dict:
+        old_edges=main.edge_list
+        main.edge_list=[]
+        for i in old_edges:
             for r in self.rule_dict:
-                if i[0]==r:
+                if i.get_label()==r:
                     rule=self.rule_dict[r]
-                    self.rule_size(main, i, rule, count_dict)
-                    if r=='C':
-                        self.rule_size(main, i, self.d_rule, count_dict)
-                        del self.new_edges[self.c_rule[-1]+str(count_dict[self.c_rule[-1]]-2)]
-        return(self.new_edges)
-        
-
-    def rule_size(self, main, i, rule, count_dict):
-        """Checks whether the accessed rule creates a bracketed node (long_rule) 
+                    self.rule_size(main, i, rule)
+            
+    def rule_size(self, main, i, rule):
+        """Checks whether the accessed rule creates a bracketed node (long_rule)
         or if it just swaps the letter label of the edge (short_rule).
 
-        Parameters
-        ---
-        main: object
-            -object from the Main class
-        i: string
-            -the key for an item in main.edge_dict
-        rule: string
-            -the rule for the given edge type
-        count_dict: dictionary
-            -keeps track of how many edges of each type have been added to 
-            self.new_edges so as to not overwrite an already existing key's value
-        """    
+        Args:
+            main (object): oject of the Main class
+            i (object): edge object
+            rule (string): string of the rule being followed
+        """   
         if len(rule)==7:
-            self.long_rule(main, i, rule, count_dict)
+            self.long_rule(main, i, rule)
         elif len(rule)==3:
-            self.short_rule(main, i, rule, count_dict)
+            self.short_rule(main, i, rule)
 
-
-    def long_rule(self, main, i, rule, count_dict):
+    def long_rule(self, main, i, rule):
         """Mutates A, B, and D type edges.
 
-        Parameters
-        ---
-        main: object
-            -object from the Main class
-        i: string
-            -the key for an item in main.edge_dict
-        rule: string
-            -the rule for the given edge type
-        count_dict: dictionary
-            -keeps track of how many edges of each type have been added to 
-            self.new_edges so as to not overwrite an already existing key's value
+        Args:
+            main (object): oject of the Main class
+            i (object): edge object
+            rule (string): string of the rule being followed
         """
-        l=3
-        bracket=''
-        while (l<6):
-            bracket+=rule[l]
-            l+=1
-        node_id=self.new_node(main)
-        new_edge=main.edge_dict[i][0]+node_id+ bracket
-        main.wacky_node_names.append(node_id+ bracket)
-        self.new_edges[rule[2] + str(count_dict[rule[2]])]=new_edge
-        count_dict[rule[2]]+=1
-        new_edge=(node_id+ bracket)+main.edge_dict[i][1]
-        self.new_edges[rule[-1] + str(count_dict[rule[-1]])]=new_edge
-        count_dict[rule[-1]]+=1
+        self.edge_new_start(main, i, rule)
+        self.edge_new_end(main, i, rule)
 
-    def short_rule(self, main, i, rule, count_dict):
+    def short_rule(self, main, i, rule):
         """Mutates C and E type edges.
 
-        Parameters
-        ---
-        main: object
-            -object from the Main class
-        i: string
-            -the key for an item in main.edge_dict
-        rule: string
-            -the rule for the given edge type
-        count_dict: dictionary
-            -keeps track of how many edges of each type have been added to 
-            self.new_edges so as to not overwrite an already existing key's value
+        Args:
+            main (object): oject of the Main class
+            i (object): edge object
+            rule (string): string of the rule being followed
         """
-        self.new_edges[rule[-1] + str(count_dict[rule[-1]])]=main.edge_dict[i]
-        count_dict[rule[-1]]+=1
+        new_edge=Edge(rule[-1], i.get_start(), i.get_end())
+        main.edge_list.append(new_edge)
+        [rule[-1]]+=1
 
-    def new_node(self, main):
-        """Increments the node labels through single digit integers, and 
-        exceeding that, labels them alpahbetically.
+    def new_node(self, main, rule):
+        """Creates a new node object.
 
-        Parameters
-        ---
-        main: object
-            -oject from the Main class
+        Args:
+            main (object): oject of the Main class
+            rule (string): the rule being followed to extract the bracket type
+
+        Returns:
+            node (object): an object containing the label and bracket suffix of a node
+        """
+        node=Node(main.node_number)
+        main.node_number+=1
+        node.set_bracket(rule[4])
+        return node
+    
+    def edge_new_start(self, main, i, rule):
+        """Creates the first edge in a long rule.
+
+        Args:
+            main (object): oject of the Main class
+            i (object): edge object
+            rule (string): string of the rule being followed
+        """
+        new_node=self.new_node(main, rule)
+        main.node_list.append(new_node)
+        new_node.set_label(new_node.get_label())
+        new_edge=Edge(rule[2], i.get_start(), new_node)
+        main.edge_list.append(new_edge)
+        main.bracket_nodes.append(new_node)
         
-        Returns
-        ---
-        node_id: string
-            -an identification string pertaining to each new node. 
-            Ranges from 1-9 and then lowercase alphabetical letters. 
-            len(node_id) should never be more than 1
+    def edge_new_end(self, main, i, rule):
+        """Creates the second edge in a long rule.
+
+        Args:
+            main (object): oject of the Main class
+            i (object): edge object
+            rule (string): string of the rule being followed
         """
-        if main.node_number>=9:
-            node_id=main.alpha[self.node_index]
-            self.node_index+=1
-            main.node_number+=1
-        else:
-            main.node_number+=1
-            node_id=str(main.node_number)
-        return node_id
+        node=main.node_list[-1]
+        new_edge=Edge(rule[-1], node, i.get_end())
+        main.edge_list.append(new_edge)

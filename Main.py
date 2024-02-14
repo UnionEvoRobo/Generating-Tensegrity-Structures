@@ -1,80 +1,81 @@
 """Main class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
 
 import graphviz  # doctest: +NO_EXE
 from Mutator import Mutator
+from Edge import Edge
+from Node import Node
 dot = graphviz.Digraph(comment='Tensegrity Object Graph')
 dot
 
 class Main:
 
     def __init__(self):
-        self.alpha=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+        self.edge_types=["A","B","C","D","E"]
         self.mutator=Mutator()
-        self.edge_dict={}
-        self.final_dict={}
-        self.wacky_node_names=[]
-        self.node_number=-1
-        self.number_of_muta=2
-        self.node_limit=0   
+        self.edge_list=[]
+        self.node_list=[]
+        self.bracket_nodes=[]
+        self.node_number=0
+        self.number_of_muta=1
 
     def create_graph(self):
         """Generates a dictionary representing the initial graph to be
         fed into the mutator and then runs the dictionary (edge_dict) 
         through the mutator however many times is desired.
         """
-        if self.number_of_muta==1:
-            self.node_limit=3
-        elif self.number_of_muta==2:
-            self.node_limit=7
-        while self.node_number<3:
-            dot.node(str(self.node_number+1))
+        while self.node_number<4:
+            node=Node(self.node_number)
             self.node_number+=1
-        self.edge_dict={'A':'01', 'B':'12', 'C':'23', 'D':'30', 'E':'13'}
+            self.node_list.append(node)
+        edge=Edge("A", self.node_list[0], self.node_list[1])
+        self.edge_list.append(edge)
+        edge=Edge("B", self.node_list[1], self.node_list[2])
+        self.edge_list.append(edge)
+        edge=Edge("C", self.node_list[2], self.node_list[3])
+        self.edge_list.append(edge)
+        edge=Edge("D", self.node_list[3], self.node_list[0])
+        self.edge_list.append(edge)
+        edge=Edge("E", self.node_list[1], self.node_list[3])
+        self.edge_list.append(edge)
         muta=0
         while muta<(self.number_of_muta-1):
-            self.edge_dict=self.mutator.mutating(self)
-            self.clean_dict()
+            self.mutator.mutating(self)
             muta+=1
-        self.final_dict=self.mutator.mutating(self)
+        self.mutator.mutating(self)
 
     def draw_graph(self):
-        """Reads through the contents of final_dict and interfaces
-        with graphviz to actually create the edges of the actual 
-        graph. Then creates additional edges between any paired 
-        bracket nodes.
+        """Calls drawing helper methods to generate nodes and edges
+        from the contents of the lists called node_list, edge_list,
+        and bracket_nodes.
         """
-        for i in self.final_dict:
-            if (self.final_dict[i][0]) in self.alpha or int(self.final_dict[i][0])>self.node_limit:
-                dot.edge(self.final_dict[i][0], self.final_dict[i][4], i[0])
-            elif (self.final_dict[i][1]) in self.alpha or int(self.final_dict[i][1]):
-                dot.edge(self.final_dict[i][0], self.final_dict[i][1], i[0])
-            else:
-                dot.edge(self.final_dict[i][0], self.final_dict[i][1], i[0])
+        self.draw_normal_edges()
+        self.draw_bracket_edges()
 
-        for i in range (len(self.wacky_node_names)-1):
-            if self.wacky_node_names[i][2]==self.wacky_node_names[i+1][2]:
-                dot.edge(self.wacky_node_names[i][0],self.wacky_node_names[i+1][0],self.wacky_node_names[i][2].capitalize())
-
-    
-    def clean_dict(self):
-        """Cleans and returns the dictionary of current edges, 
-        removing all of the bracketed node lables generated 
-        by the rules for A, B, and D edges.
-
-        NOT to be used on the final_dict dictionary of the 
-        final structure. As of this version, the draw graph
-        method requires the bracketed node labels.
+    def draw_normal_edges(self):
+        """Reads through the node_list and edge_list and generates nodes
+        and edges respectively using the information contained within
+        the node and edge objects.
         """
-        for i in self.edge_dict:
-            if len(self.edge_dict[i])>2:
-                if self.edge_dict[i][2]=="{":
-                    self.edge_dict[i]=self.edge_dict[i][0:2]
-                elif self.edge_dict[i][1]=="{":
-                    self.edge_dict[i]=self.edge_dict[i][0]+self.edge_dict[i][4]
+        for i in self.node_list:
+            dot.node(i.get_label())
+        for i in self.edge_list:
+            dot.edge(i.get_start_label(), i.get_end_label(), i.get_label())
+
+    def draw_bracket_edges(self):
+        """Reads through the bracket_nodes list and checks the bracket field
+        of each node. If any two unique nodes have the same bracket type, 
+        it will generate a graphviz edge between the two of that edge type.
+        """
+        for i in self.bracket_nodes:
+            for r in self.bracket_nodes:
+                if i!=r and self.bracket_nodes.index(i)<self.bracket_nodes.index(r):
+                    if i.get_bracket()==r.get_bracket():
+                        dot.edge(i.get_label(), r.get_label(), i.get_bracket().capitalize())
+
 
 
 if __name__=='__main__':
@@ -82,5 +83,5 @@ if __name__=='__main__':
     graph.create_graph()
     graph.draw_graph()
     print(dot.source)
-    dot.render('doctest-output/finalGraph.gv').replace('\\', '/')
-    'doctest-output/finalGraph.gv.pdf'
+    dot.render('doctest-output/newClasses.gv').replace('\\', '/')
+    'doctest-output/newClasses.gv.pdf'
