@@ -62,7 +62,6 @@ class Mutator:
         """
         new_edge=Edge(rule[-1], i.get_start(), i.get_end())
         main.edge_list.append(new_edge)
-        [rule[-1]]+=1
 
     def new_node(self, main, rule):
         """Creates a new node object.

@@ -20,7 +20,7 @@ class Main:
         self.node_list=[]
         self.bracket_nodes=[]
         self.node_number=0
-        self.number_of_muta=1
+        self.number_of_muta=3
 
     def create_graph(self):
         """Generates a dictionary representing the initial graph to be
@@ -74,7 +74,10 @@ class Main:
             for r in self.bracket_nodes:
                 if i!=r and self.bracket_nodes.index(i)<self.bracket_nodes.index(r):
                     if i.get_bracket()==r.get_bracket():
-                        dot.edge(i.get_label(), r.get_label(), i.get_bracket().capitalize())
+                        edge=Edge(i.get_bracket().capitalize(), i, r)
+                        if edge.is_unique(self.edge_list):
+                            self.edge_list.append(edge)
+                            dot.edge(edge.get_start_label(), edge.get_end_label(), edge.get_label())
 
 
 
@@ -83,5 +86,5 @@ if __name__=='__main__':
     graph.create_graph()
     graph.draw_graph()
     print(dot.source)
-    dot.render('doctest-output/newClasses.gv').replace('\\', '/')
-    'doctest-output/newClasses.gv.pdf'
+    dot.render('doctest-output/no_doubles.gv').replace('\\', '/')
+    'doctest-output/no_doubles.gv.pdf'

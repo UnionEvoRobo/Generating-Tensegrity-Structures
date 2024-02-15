@@ -53,5 +53,34 @@ class Edge:
             pointed to by self.end
         """
         return str(self.end.get_label())
+    
+    def equals(self, edge2):
+        """Compares to edge objects based on their start and end nodes. 
         
+        If two edges are the reverse of each other they are still equal.
+
+        Args:
+            edge2 (object): the second edge object to compare against.
+
+        Returns:
+            boolean: Returns true if the two edges are equal. False if not.
+        """
+        if (self.get_start()==edge2.get_start() or self.get_start()==edge2.get_end()):
+            return (self.get_end()==edge2.get_end() or self.get_end()==edge2.get_start())
+        else:
+            return False
         
+    def is_unique(self, edges):
+        """Compares a given edge to all edges in the edge_list from the main module. 
+        If it is not equal to any edge in the list then it is unique.
+
+        Args:
+            edges (list): the edge_list from main
+
+        Returns:
+            boolean: Returns true if the given edge is unique. False if not.
+        """
+        for i in edges:
+            if self.equals(i):
+                return False
+        return True 

@@ -41,4 +41,3 @@ class Node:
             self.bracket(string): string indicating the bracket type
         """
         return str(self.bracket)
-        
