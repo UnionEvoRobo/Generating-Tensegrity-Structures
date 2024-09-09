@@ -84,3 +84,15 @@ class Edge:
             if self.equals(i):
                 return False
         return True 
+    
+    def contains(self, nodeLabel):
+        """Checks an edge for whether or not it contains a given node.
+
+        Args:
+            nodeLabel (string): the label of the node being checked for
+
+        Returns:
+            boolean: Returns true if the edge's start or end node's label 
+            matches the given nodeLable. False if not.
+        """
+        return nodeLabel==self.get_start_label() or nodeLabel==self.get_end_label()

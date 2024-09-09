@@ -5,7 +5,7 @@
 """
 
 import graphviz  # doctest: +NO_EXE
-from Mutator import Mutator
+from Transformer import Transformer
 from Edge import Edge
 from Node import Node
 dot = graphviz.Digraph(comment='Tensegrity Object Graph')
@@ -15,17 +15,18 @@ class Main:
 
     def __init__(self):
         self.edge_types=["A","B","C","D","E"]
-        self.mutator=Mutator()
+        self.transformer=Transformer()
         self.edge_list=[]
         self.node_list=[]
         self.bracket_nodes=[]
         self.node_number=0
-        self.number_of_muta=1
+        self.num_transformations=1
+        
 
     def create_graph(self):
         """Generates a dictionary representing the initial graph to be
-        fed into the mutator and then runs the dictionary (edge_dict) 
-        through the mutator however many times is desired.
+        fed into the transformer and then runs the dictionary (edge_dict) 
+        through the transformer however many times is desired.
         """
         while self.node_number<4:
             node=Node(self.node_number)
@@ -41,11 +42,11 @@ class Main:
         self.edge_list.append(edge)
         edge=Edge("E", self.node_list[1], self.node_list[3])
         self.edge_list.append(edge)
-        muta=0
-        while muta<(self.number_of_muta-1):
-            self.mutator.mutating(self)
-            muta+=1
-        self.mutator.mutating(self)
+        transformations=0
+        while transformations<(self.num_transformations-1):
+            self.transformer.transform(self)
+            transformations+=1
+        self.transformer.transform(self)
 
     def draw_graph(self):
         """Calls drawing helper methods to generate nodes and edges
@@ -84,5 +85,5 @@ if __name__=='__main__':
     graph = Main()
     graph.create_graph()
     graph.draw_graph()
-    dot.render('doctest-output/repoGraph.gv').replace('\\', '/')
-    'doctest-output/repoGraph.gv.pdf'
+    dot.render('doctest-output/standardOutput.gv').replace('\\', '/')
+    'doctest-output/standardOutput.gv.pdf'

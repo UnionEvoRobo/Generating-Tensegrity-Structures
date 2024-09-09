@@ -1,4 +1,4 @@
-"""Mutator class for the generation of complex tensegrity structures.
+"""Transformer class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
 @version: 3.0
@@ -7,14 +7,14 @@
 from Edge import Edge
 from Node import Node
 
-class Mutator:
+class Transformer:
 
     def __init__(self):
         self.rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
         self.node_index=0
 
-    def mutating(self, main):
-        """Controls all operations of the mutator class.
+    def transform(self, main):
+        """Controls all operations of the transformer class.
 
         Args:
             main (object): oject of the Main class
@@ -42,7 +42,7 @@ class Mutator:
             self.short_rule(main, i, rule)
 
     def long_rule(self, main, i, rule):
-        """Mutates A, B, and D type edges.
+        """Transforms A, B, and D type edges.
 
         Args:
             main (object): oject of the Main class
@@ -53,7 +53,7 @@ class Mutator:
         self.edge_new_end(main, i, rule)
 
     def short_rule(self, main, i, rule):
-        """Mutates C and E type edges.
+        """Transforms C and E type edges.
 
         Args:
             main (object): oject of the Main class

@@ -26,8 +26,7 @@ class Node:
         self.label=new_label
 
     def set_bracket(self, bracket_type):
-        """Set the bracket field equal to the type sent from the
-        mutator class.
+        """Set the bracket field type.
 
         Args:
             bracket_type (string): bracket type indicated by a rule
