@@ -10,8 +10,6 @@ At the very bottom of Main.py on lines 88 and 89 you can change the name of the 
 
 To Do/Implement (not ordered by importance):
 
-1: I have noticed that some of the nodes in graphs generated with more passes do NOT have at least the desired minimum of 3 edges.
-
 2: Tensegrity form finding function 
 
 2: Primary mutations
@@ -29,3 +27,5 @@ To Do/Implement (not ordered by importance):
 Fixed:
 
 Node number labels are capable of staying numbers and can be as many characters long as desired.
+
+SOLVED (kinda, it doesn't work if it's only been transformed one time. 2 and up seems to work fine) I have noticed that some of the nodes in graphs generated with more passes do NOT have at least the desired minimum of 3 edges.

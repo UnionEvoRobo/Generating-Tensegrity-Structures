@@ -1,10 +1,10 @@
 """Main class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 3.0
+@version: 4.0
 """
 
-import graphviz  # doctest: +NO_EXE
+import graphviz  
 from Transformer import Transformer
 from Edge import Edge
 from Node import Node
@@ -20,7 +20,7 @@ class Main:
         self.node_list=[]
         self.bracket_nodes=[]
         self.node_number=0
-        self.num_transformations=1
+        self.num_transformations=3
         
 
     def create_graph(self):
@@ -47,6 +47,14 @@ class Main:
             self.transformer.transform(self)
             transformations+=1
         self.transformer.transform(self)
+        
+    def generate_bracket_edges(self):
+        for i in self.bracket_nodes:
+            for r in self.bracket_nodes:
+                if i!=r and self.bracket_nodes.index(i)<self.bracket_nodes.index(r) and i.get_bracket()==r.get_bracket():
+                    edge=Edge(i.get_bracket().capitalize(), i, r)
+                    if edge.is_unique(self.edge_list):
+                        self.edge_list.append(edge)        
 
     def draw_graph(self):
         """Calls drawing helper methods to generate nodes and edges
@@ -54,7 +62,6 @@ class Main:
         and bracket_nodes.
         """
         self.draw_normal_edges()
-        self.draw_bracket_edges()
 
     def draw_normal_edges(self):
         """Reads through the node_list and edge_list and generates nodes
@@ -66,24 +73,38 @@ class Main:
         for i in self.edge_list:
             dot.edge(i.get_start_label(), i.get_end_label(), i.get_label())
 
-    def draw_bracket_edges(self):
-        """Reads through the bracket_nodes list and checks the bracket field
-        of each node. If any two unique nodes have the same bracket type, 
-        it will generate a graphviz edge between the two of that edge type.
-        """
-        for i in self.bracket_nodes:
-            for r in self.bracket_nodes:
-                if i!=r and self.bracket_nodes.index(i)<self.bracket_nodes.index(r) and i.get_bracket()==r.get_bracket():
-                    edge=Edge(i.get_bracket().capitalize(), i, r)
-                    if edge.is_unique(self.edge_list):
-                        self.edge_list.append(edge)
-                        dot.edge(edge.get_start_label(), edge.get_end_label(), edge.get_label())
+    def cardinality(self):
+        for node in self.node_list:
+            for edge in self.edge_list:
+                if edge.contains(node):
+                    node.add_edge()
 
-
+    def remove_extraneous_nodes(self):
+        goodbye_edges=[]
+        goodbye_nodes=[]
+        for node in self.node_list:
+            if node.is_extraneous():
+                goodbye_nodes.append(node)
+                for edge in self.edge_list:
+                    if edge.contains(node) and goodbye_edges.count(edge)==0:
+                        goodbye_edges.append(edge)
+        for i in goodbye_nodes:
+            self.node_list.remove(i)
+        for i in goodbye_edges:
+            self.edge_list.remove(i)
+    
+        
+                        
+                        
+                        
+        
 
 if __name__=='__main__':
     graph = Main()
     graph.create_graph()
+    graph.generate_bracket_edges()
+    graph.cardinality()
+    graph.remove_extraneous_nodes()
     graph.draw_graph()
     dot.render('doctest-output/standardOutput.gv').replace('\\', '/')
     'doctest-output/standardOutput.gv.pdf'
