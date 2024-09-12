@@ -1,15 +1,33 @@
 """Edge class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 1.0
+@version: 2.0
 """
 class Edge:
     
     def __init__(self, label, start, end):
         self.label=label
-        self.start=start
-        self.end=end
+        self.set_start(start)
+        self.set_end(end)
 
+    def set_start(self, new_start):
+        """Setter for the starting node property of an edge
+
+        Args:
+            new_start (Node): The node intended as the 
+            starting location of the edge
+        """
+        self.start=new_start
+        
+    def set_end(self, new_end):
+        """Setter for the ending node property of an edge
+
+        Args:
+            new_start (Node): The node intended as the 
+            ending location of the edge
+        """
+        self.end=new_end
+    
     def get_label(self):
         """Return the label string.
 
@@ -85,14 +103,28 @@ class Edge:
                 return False
         return True 
     
-    def contains(self, nodeLabel):
+    def contains(self, node_label):
         """Checks an edge for whether or not it contains a given node.
 
         Args:
-            nodeLabel (string): the label of the node being checked for
+            node_label (string): the label of the node being checked for
 
         Returns:
             boolean: Returns true if the edge's start or end node's label 
             matches the given nodeLable. False if not.
         """
-        return nodeLabel==self.get_start_label() or nodeLabel==self.get_end_label()
+        return node_label==self.get_start_label() or node_label==self.get_end_label()
+    
+    def swap_ends(self, new_end):
+        """Replaces the current end node of the edge with 
+        the designated new_end
+
+        Args:
+            new_end (Node): the intended new end location of the edge
+
+        Returns:
+            Node: Returns the former ending node of the edge
+        """
+        cur_end=self.get_end()
+        self.set_end(new_end)
+        return cur_end

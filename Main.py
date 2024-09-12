@@ -1,13 +1,14 @@
 """Main class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 3.0
+@version: 4.0
 """
 
 import graphviz  # doctest: +NO_EXE
 from Transformer import Transformer
 from Edge import Edge
 from Node import Node
+from Secondary_Mutations import Secondary_Mutations
 dot = graphviz.Digraph(comment='Tensegrity Object Graph')
 dot
 
@@ -79,11 +80,22 @@ class Main:
                         self.edge_list.append(edge)
                         dot.edge(edge.get_start_label(), edge.get_end_label(), edge.get_label())
 
+    def mutate_graph(self, edge1_ind, edge2_ind):
+        """Takes two edges and passes them to the secondary_mutations class
+        to undergo a secondary mutation
+
+        Args:
+            edge1_ind (integer): The index of the first desired edge in the edge_list
+            edge2_ind (integer): The index of the second desired edge in the edge_list
+        """
+        mutator=Secondary_Mutations(self.edge_list[edge1_ind],self.edge_list[edge2_ind])
+        mutator.mutate_graph()
+        
 
 
 if __name__=='__main__':
     graph = Main()
     graph.create_graph()
     graph.draw_graph()
-    dot.render('doctest-output/standardOutput.gv').replace('\\', '/')
+    dot.save('doctest-output/standardOutput.gv' ).replace('\\', '/')
     'doctest-output/standardOutput.gv.pdf'
