@@ -46,11 +46,20 @@ class Node:
         return self.num_edges
     
     def add_edge(self):
+        """Increments the number of edges property by 1
+        """
         self.num_edges+=1
         
     def remove_edge(self):
+        """Decrements the number of edges property by 1"""
         self.num_edges-=1
  
     def is_extraneous(self):
+        """Indicates whether or not a node has the desired three edges.
+
+        Returns:
+            boolean: returns true if the node's num_edges property is 
+            greater than or equal to three. Otherwise returns false.
+        """
         return self.get_num_edges()<3
         

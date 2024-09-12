@@ -73,12 +73,17 @@ class Main:
             dot.edge(i.get_start_label(), i.get_end_label(), i.get_label())
 
     def cardinality(self):
+        """Sets the cardinality of each node in the node_list
+        """
         for node in self.node_list:
             for edge in self.edge_list:
                 if edge.contains(node):
                     node.add_edge()
 
     def remove_extraneous_nodes(self):
+        """Removes all nodes that have less than 3 edges 
+        beginning and ending at its location.
+        """
         goodbye_edges=[]
         goodbye_nodes=[]
         for node in self.node_list:
@@ -94,10 +99,6 @@ class Main:
     
         
                         
-                        
-                        
-        
-
 if __name__=='__main__':
     graph = Main()
     graph.create_graph()
