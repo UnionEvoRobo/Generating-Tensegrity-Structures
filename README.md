@@ -18,14 +18,20 @@ To Do/Implement (not ordered by importance):
 
 3: Crossover mutations
 
-4: Secondary mutations
-    i: Swap string endpoints
-    ii: Swap strut endpoints
-
 5: Actual evolutionary algorithm
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Fixed:
+In Progress:
+
+4: Secondary mutations
+    i: Swap string endpoints
+    ii: Swap strut endpoints
+    
+    NOTE: I have created the class/basic functionality but have yet to implement this formally into the graph making process.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Fixed/Finished:
 
 Node number labels are capable of staying numbers and can be as many characters long as desired.
