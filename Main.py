@@ -20,7 +20,7 @@ class Main:
         self.node_list=[]
         self.bracket_nodes=[]
         self.node_number=0
-        self.num_transformations=3
+        self.num_transformations=1
         
 
     def create_graph(self):
@@ -43,10 +43,9 @@ class Main:
         edge=Edge("E", self.node_list[1], self.node_list[3])
         self.edge_list.append(edge)
         transformations=0
-        while transformations<(self.num_transformations-1):
+        while transformations<(self.num_transformations):
             self.transformer.transform(self)
             transformations+=1
-        self.transformer.transform(self)
         
     def generate_bracket_edges(self):
         for i in self.bracket_nodes:
