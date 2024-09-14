@@ -8,7 +8,7 @@ class Node:
     def __init__(self, label):
         self.label=str(label)
         self.bracket=None
-        self.num_edges=0
+        self.degree=0
 
     def set_label(self, new_label):
         """Set self.label to the given string.
@@ -42,17 +42,18 @@ class Node:
         """
         return str(self.bracket)
     
-    def get_num_edges(self):
-        return self.num_edges
+    def get_degree(self):
+        return self.degree
     
     def add_edge(self):
-        """Increments the number of edges property by 1
+        """Increments the degree of the node property by 1
         """
-        self.num_edges+=1
+        self.degree+=1
         
     def remove_edge(self):
-        """Decrements the number of edges property by 1"""
-        self.num_edges-=1
+        """Decrements the degree of the node property by 1
+        """
+        self.degree-=1
  
     def is_extraneous(self):
         """Indicates whether or not a node has the desired three edges.
@@ -61,5 +62,5 @@ class Node:
             boolean: returns true if the node's num_edges property is 
             greater than or equal to three. Otherwise returns false.
         """
-        return self.get_num_edges()<3
+        return self.get_degree()<3
         
