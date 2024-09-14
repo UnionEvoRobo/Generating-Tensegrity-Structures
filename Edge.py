@@ -103,28 +103,14 @@ class Edge:
                 return False
         return True 
     
-    def contains(self, node_label):
+    def contains(self, node):
         """Checks an edge for whether or not it contains a given node.
 
         Args:
-            node_label (string): the label of the node being checked for
+            nodeLabel (string): the node being checked for
 
         Returns:
-            boolean: Returns true if the edge's start or end node's label 
+            boolean: Returns true if the edge's start or end node 
             matches the given nodeLable. False if not.
         """
-        return node_label==self.get_start_label() or node_label==self.get_end_label()
-    
-    def swap_ends(self, new_end):
-        """Replaces the current end node of the edge with 
-        the designated new_end
-
-        Args:
-            new_end (Node): the intended new end location of the edge
-
-        Returns:
-            Node: Returns the former ending node of the edge
-        """
-        cur_end=self.get_end()
-        self.set_end(new_end)
-        return cur_end
+        return node==self.get_start() or node==self.get_end()
