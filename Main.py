@@ -42,6 +42,16 @@ class Main:
         for i in goodbye_edges:
             self.graph.edge_list.remove(i)
     
+    def mutate_graph(self, edge1_ind, edge2_ind):
+        """Takes two edges and passes them to the secondary_mutations class
+        to undergo a secondary mutation
+
+        Args:
+            edge1_ind (integer): The index of the first desired edge in the edge_list
+            edge2_ind (integer): The index of the second desired edge in the edge_list
+        """
+        mutator=Secondary_Mutations(self.edge_list[edge1_ind],self.edge_list[edge2_ind])
+        mutator.mutate_graph()
         
                         
 if __name__=='__main__':

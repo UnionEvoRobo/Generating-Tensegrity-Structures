@@ -114,3 +114,17 @@ class Edge:
             matches the given nodeLable. False if not.
         """
         return node==self.get_start() or node==self.get_end()
+    
+    def swap_ends(self, new_end):
+        """Replaces the current end node of the edge with 
+        the designated new_end
+
+        Args:
+            new_end (Node): the intended new end location of the edge
+
+        Returns:
+            Node: Returns the former ending node of the edge
+        """
+        cur_end=self.get_end()
+        self.set_end(new_end)
+        return cur_end
