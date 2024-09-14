@@ -1,7 +1,7 @@
 """Main class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 3.0
+@version: 4.0
 """
 
 import graphviz  # doctest: +NO_EXE
@@ -13,8 +13,7 @@ dot
 class Main:
 
     def __init__(self, num_transformations, rule_dict):
-        self.graph=Graph(rule_dict)
-        self.num_transformations=num_transformations
+        self.graph=Graph(rule_dict,num_transformations)
 
     def draw_graph(self):
         """Calls drawing helper methods to generate nodes and edges
@@ -51,10 +50,10 @@ class Main:
 
 if __name__=='__main__':
     rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
-    num_trans=1
+    num_trans=4
     output_name='standardOutput'
     main = Main(num_trans,rule_dict)
-    main.create_graph()
+    main.graph.create_graph()
     main.draw_graph()
     dot.render('doctest-output/%s.gv' %(output_name)).replace('\\', '/')
     ('doctest-output/%s.gv.pdf' %(output_name))
