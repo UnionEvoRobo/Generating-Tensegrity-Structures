@@ -12,8 +12,8 @@ dot
 
 class Main:
 
-    def __init__(self, num_transformations, rule_dict):
-        self.graph=Graph(rule_dict,num_transformations)
+    def __init__(self, rule_dict, edge_types):
+        self.graph=Graph(rule_dict,edge_types)
     
     def draw_graph(self):
         """Reads through the node_list and edge_list and generates nodes
@@ -57,10 +57,11 @@ class Main:
 if __name__=='__main__':
     rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
     num_trans=1
+    edge_types=["A","B","C","D","E"]
     output_name='standardOutput'
-    main = Main(num_trans,rule_dict)
+    main = Main(rule_dict,edge_types)
     main.graph.create_graph()
-    main.graph.transform()
+    main.graph.transform(num_trans)
     main.graph.generate_bracket_edges()
     main.remove_extraneous_nodes()
     main.draw_graph()

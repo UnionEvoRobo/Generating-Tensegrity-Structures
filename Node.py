@@ -5,9 +5,9 @@
 """
 class Node:
     
-    def __init__(self, label):
+    def __init__(self, label, bracket=None):
         self.label=str(label)
-        self.bracket=None
+        self.bracket=bracket
         self.degree=0
 
     def set_label(self, new_label):

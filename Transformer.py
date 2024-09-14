@@ -40,7 +40,7 @@ class Transformer:
         """Transforms A, B, and D type edges.
 
         """
-        new_node=self.graph.add_node(self.rule)
+        new_node=self.graph.add_node(self.rule[4])
         self.graph.add_edge(self.rule[2],self.act_edge.get_start(),new_node)
         self.graph.add_edge(self.rule[-1],self.graph.node_list[-1],self.act_edge.get_end())
 

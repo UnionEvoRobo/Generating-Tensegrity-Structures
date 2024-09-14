@@ -11,26 +11,50 @@ from Edge import Edge
 
 class Graph:
         
-    def __init__(self, rules, num_trans):
-        self.edge_types=["A","B","C","D","E"]
-        self.rules_dict=rules
+    def __init__(self, rules, edge_types):
+        self.edge_types=edge_types
+        self.rules=rules
         self.transformer=Transformer(self)
         self.edge_list=[]
         self.node_list=[]
         self.bracket_nodes=[]
         self.node_number=0
-        self.num_transformations=num_trans
 
     def get_rule(self, key):
-        return self.rules_dict[key]
+        """Getter for individual rules in the rule dictionary
+
+        Args:
+            key (string): string containing the dictionary 
+            key for the desired rule
+
+        Returns:
+            string: string containing the desired rule
+        """
+        return self.rules[key]
     
     def get_edge_types(self):
+        """Getter for the list of different edge types
+
+        Returns:
+            list: list containing strings of the different 
+            possible edge types
+        """
         return self.edge_types
     
     def order(self):
+        """Gives the order, or number of nodes, of the graph
+
+        Returns:
+            int: number of nodes in the graph
+        """
         return len(self.node_list)
     
     def size(self):
+        """Gives the size, or number of edges, of the graph
+
+        Returns:
+            int: number of edges in the graph
+        """
         return len(self.edge_list)
     
     def create_graph(self):
@@ -53,31 +77,62 @@ class Graph:
         edge=Edge("E", self.node_list[1], self.node_list[3])
         self.edge_list.append(edge)
         
-    def transform(self):
+    def transform(self, num_trans):
+        """Passes the graph through the transformer a number of times
+
+        Args:
+            num_trans (int): the desired number of passes through 
+            the transformer
+        """
         transformations=0
-        while transformations<(self.num_transformations):
+        while transformations<(num_trans):
             self.transformer.transform()
             transformations+=1
     
-    def swap_rule(self,key,new_rule):
-        self.rules_dict[key]=new_rule
+    def swap_rule(self, key, new_rule):
+        """Changes the definition of the rule at the indicated key
+
+        Args:
+            key (string): string containing the dictionary 
+            key for the rule that will be changed
+            
+            new_rule (string): string containing the new rule
+        """
+        self.rules[key]=new_rule
         
-    def add_node(self,rule):
-        node=Node(self.node_number)
+    def add_node(self, bracket):
+        """Creates and adds a new node to the graph
+
+        Args:
+            bracket (string): string indicating what 
+            the bracket property will be
+
+        Returns:
+            Node: returns the newly created node
+        """
+        node=Node(self.node_number,bracket)
         self.node_number+=1
-        node.set_bracket(rule[4])
         self.node_list.append(node)
         self.bracket_nodes.append(node)
         return node
     
     def add_edge(self, label, start, end):
-        
+        """Creates and adds a new edge to the graph
+
+        Args:
+            label (string): _description_
+            start (Node): the origin node of the edge
+            end (Node): the destination node for the edge
+        """
         edge=Edge(label, start, end)
         self.edge_list.append(edge)
         start.add_edge()
         end.add_edge()
     
     def generate_bracket_edges(self):
+        """Creates new connecting edges between 
+           nodes with matching bracket types
+        """
         for i in self.bracket_nodes:
             for r in self.bracket_nodes:
                 if i!=r and self.bracket_nodes.index(i)<self.bracket_nodes.index(r) and i.get_bracket()==r.get_bracket():
