@@ -3,12 +3,15 @@
 @author: Daniel Casper
 @version: 2.0
 """
+
+import copy 
+
 class Node:
     
     def __init__(self, label, bracket=None):
         self.label=str(label)
         self.bracket=bracket
-        self.degree=0
+        self.adjacent=[]
 
     def set_label(self, new_label):
         """Set self.label to the given string.
@@ -22,9 +25,17 @@ class Node:
         """Return the label string.
 
         Returns:
-            self.label(string): string indicating the node number
+            string: string indicating the node number
         """
         return str(self.label) 
+    
+    def get_adjacent(self):
+        """Return a list of all adjacent nodes.
+
+        Returns:
+            list: list of all adjacent nodes
+        """
+        return copy.deepcopy(self.adjacent)
 
     def set_bracket(self, bracket_type):
         """Set the bracket field type.
@@ -43,12 +54,12 @@ class Node:
         return str(self.bracket)
     
     def get_degree(self):
-        return self.degree
+        return len(self.adjacent)
     
-    def add_edge(self):
+    def add_edge(self, node):
         """Increments the degree of the node property by 1
         """
-        self.degree+=1
+        self.adjacent.append(node)
         
     def remove_edge(self):
         """Decrements the degree of the node property by 1
@@ -63,4 +74,6 @@ class Node:
             greater than or equal to three. Otherwise returns false.
         """
         return self.get_degree()<3
-        
+      
+    def is_adjacent(self, node):
+        return self.adjacent.__contains__(node)

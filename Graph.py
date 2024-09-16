@@ -118,7 +118,7 @@ class Graph:
     
     def add_edge(self, label, start, end):
         """Creates and adds a new edge to the graph
-
+        
         Args:
             label (string): _description_
             start (Node): the origin node of the edge
@@ -126,37 +126,37 @@ class Graph:
         """
         edge=Edge(label, start, end)
         self.edge_list.append(edge)
-        start.add_edge()
-        end.add_edge()
+        start.add_edge(end)
+        end.add_edge(start)
+        
     
     def generate_bracket_edges(self):
         """Creates new connecting edges between 
            nodes with matching bracket types
         """
-        for i in self.bracket_nodes:
-            for r in self.bracket_nodes:
-                if i!=r and self.bracket_nodes.index(i)<self.bracket_nodes.index(r) and i.get_bracket()==r.get_bracket():
-                    edge=Edge(i.get_bracket().capitalize(), i, r)
+        for node1 in self.bracket_nodes:
+            for node2 in self.bracket_nodes:
+                if node1!=node2 and self.bracket_nodes.index(node1)<self.bracket_nodes.index(node2) and node1.get_bracket()==node2.get_bracket():
+                    edge=Edge(node1.get_bracket().capitalize(), node1, node2)
                     if edge.is_unique(self.edge_list):
-                        self.edge_list.append(edge)   
-                        i.add_edge()
-                        r.add_edge() 
+                        self.edge_list.append(edge)
+                        node1.add_edge(node2)
+                        node2.add_edge(node1) 
                             
-    """def adjacent(self, x, y):
-        #tests whether there is an edge from the vertex x to the vertex y;
-        adjacent=False
-        for e in self.edge_list:
-            if e.contains(x):
-                adjacent=
+    def adjacent(self, node1, node2):
+        return node1.is_adjacent(node2)
+        
 
-    def neighbors(self, x):
-        #lists all vertices y such that there is an edge from the vertex x to the vertex y;
+    def neighbors(self, node1):
+        return node1.get_adjacent()
 
-
-    def remove_vertex(self, x):
+    """def remove_node(self, x):
         #removes the vertex x, if it is there;
-
+"""
 
     def remove_edge(self, x, y):
-        #removes the edge from the vertex x to the vertex y, if it is there;
-"""
+        for edge in self.edge_list:
+            if edge.contains(x) and edge.contains(y):
+                self.edge_list.remove(edge)
+                return True
+        return False

@@ -63,7 +63,7 @@ if __name__=='__main__':
     main.graph.create_graph()
     main.graph.transform(num_trans)
     main.graph.generate_bracket_edges()
-    main.remove_extraneous_nodes()
+    #main.remove_extraneous_nodes()
     main.draw_graph()
     dot.render('doctest-output/%s.gv' %(output_name)).replace('\\', '/')
     ('doctest-output/%s.gv.pdf' %(output_name))

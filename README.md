@@ -10,19 +10,23 @@ At the very bottom of Main.py on lines 88 and 89 you can change the name of the 
 
 To Do/Implement (not ordered by importance):
 
-2: Tensegrity form finding function 
+1: Tensegrity form finding function 
 
-2: Primary mutations
+2: Actual evolutionary algorithm
 
-3: Crossover mutations
-
-5: Actual evolutionary algorithm
+3: Edge reassignment for removed nodes
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 In Progress:
 
-4: Secondary mutations
+1: Primary mutations
+    NOTE: I have implemented the ability to change a rule but have not yet implemented any formal use of these mutations
+
+2: Crossover mutations
+    NOTE: I have implemented the ability to change a rule but have not yet implemented any formal use of these mutations
+
+3: Secondary mutations
     i: Swap string endpoints
     ii: Swap strut endpoints
     
