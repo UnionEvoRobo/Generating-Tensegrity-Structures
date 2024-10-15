@@ -1,11 +1,11 @@
-"""Mutator Class that facilitates the processes of a secondary mutation
+"""Mutator module that facilitates the processes of a secondary mutation.
 
 @author: Daniel Casper
 @version: 1.0
 """
 
-class Secondary_Mutations:
-    
+class SecondaryMutations:
+    """Mutator Class that facilitates the processes of a secondary mutation."""
     def __init__(self, edge1, edge2):
         self.edge1=edge1
         self.edge2=edge2

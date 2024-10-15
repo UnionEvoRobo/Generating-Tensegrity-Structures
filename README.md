@@ -38,4 +38,16 @@ Fixed/Finished:
 
 Node number labels are capable of staying numbers and can be as many characters long as desired.
 
-SOLVED (kinda, it doesn't work if it's only been transformed one time. 2 and up seems to work fine) I have noticed that some of the nodes in graphs generated with more passes do NOT have at least the desired minimum of 3 edges.
+100% SOLVED I have noticed that some of the nodes in graphs generated with more passes do NOT have at least the desired minimum of 3 edges.
+
+
+
+
+
+
+
+
+
+
+ALERT!!!!!!!!
+    LINE 27 AND 170!!!! I PASS RENDER FROM EVALUATE TO RUN_TENSEGRITY. THIS SHOULD BE FIXED!!!!!!

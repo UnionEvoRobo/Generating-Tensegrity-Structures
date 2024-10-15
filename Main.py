@@ -1,20 +1,20 @@
-"""Main class for the generation of complex tensegrity structures.
+"""Main module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
 @version: 5.0
 """
 
 import graphviz  # doctest: +NO_EXE
-from Graph import Graph
-from Secondary_Mutations import Secondary_Mutations
+from graph import Graph
+from secondary_mutations import SecondaryMutations
 dot = graphviz.Digraph(comment='Tensegrity Object Graph')
-dot
 
 class Main:
+    """Main class for the generation of complex tensegrity structures."""
 
-    def __init__(self, rule_dict, edge_types):
-        self.graph=Graph(rule_dict,edge_types)
-    
+
+    def __init__(self, rules, edges):
+        self.graph=Graph(rules,edges)
     def draw_graph(self):
         """Reads through the node_list and edge_list and generates nodes
         and edges respectively using the information contained within
@@ -29,19 +29,22 @@ class Main:
         """Removes all nodes that have less than 3 edges 
         beginning and ending at its location.
         """
-        goodbye_edges=[]
-        goodbye_nodes=[]
-        for node in self.graph.node_list:
-            if node.is_extraneous():
-                goodbye_nodes.append(node)
-                for edge in self.graph.edge_list:
-                    if edge.contains(node) and goodbye_edges.count(edge)==0:
-                        goodbye_edges.append(edge)
-        for i in goodbye_nodes:
-            self.graph.node_list.remove(i)
-        for i in goodbye_edges:
-            self.graph.edge_list.remove(i)
-    
+        loop=True
+        while loop and len(self.graph.node_list)!=0:
+            goodbye_edges=[]
+            goodbye_nodes=[]
+            loop=False
+            for node in self.graph.node_list:
+                if node.is_extraneous():
+                    loop=True
+                    goodbye_nodes.append(node)
+                    for edge in self.graph.edge_list:
+                        if edge.contains(node) and goodbye_edges.count(edge)==0:
+                            goodbye_edges.append(edge)
+            for i in goodbye_nodes:
+                self.graph.remove_node(i)
+            for i in goodbye_edges:
+                self.graph.remove_edge(i.get_start(),i.get_end())
     def mutate_graph(self, edge1_ind, edge2_ind):
         """Takes two edges and passes them to the secondary_mutations class
         to undergo a secondary mutation
@@ -50,20 +53,17 @@ class Main:
             edge1_ind (integer): The index of the first desired edge in the edge_list
             edge2_ind (integer): The index of the second desired edge in the edge_list
         """
-        mutator=Secondary_Mutations(self.edge_list[edge1_ind],self.edge_list[edge2_ind])
+        mutator=SecondaryMutations(self.graph.edge_list[edge1_ind],self.graph.edge_list[edge2_ind])
         mutator.mutate_graph()
-        
-                        
 if __name__=='__main__':
     rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
-    num_trans=1
+    NUM_TRANS=4
     edge_types=["A","B","C","D","E"]
-    output_name='standardOutput'
+    OUTPUT_NAME='standardOutput'
     main = Main(rule_dict,edge_types)
     main.graph.create_graph()
-    main.graph.transform(num_trans)
+    main.graph.transform(NUM_TRANS)
     main.graph.generate_bracket_edges()
-    #main.remove_extraneous_nodes()
+    main.remove_extraneous_nodes()
     main.draw_graph()
-    dot.render('doctest-output/%s.gv' %(output_name)).replace('\\', '/')
-    ('doctest-output/%s.gv.pdf' %(output_name))
+    dot.render(f'doctest-output/{OUTPUT_NAME}.gv').replace('\\', '/')

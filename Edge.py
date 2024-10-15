@@ -1,10 +1,11 @@
-"""Edge class for the generation of complex tensegrity structures.
+"""Edge object for the generation of complex tensegrity structures.
+
 
 @author: Daniel Casper
 @version: 2.0
 """
 class Edge:
-    
+    """Edge class for the generation of complex tensegrity structures."""    
     def __init__(self, label, start, end):
         self.label=label
         self.set_start(start)
@@ -18,7 +19,6 @@ class Edge:
             starting location of the edge
         """
         self.start=new_start
-        
     def set_end(self, new_end):
         """Setter for the ending node property of an edge
 
@@ -26,8 +26,7 @@ class Edge:
             new_start (Node): The node intended as the 
             ending location of the edge
         """
-        self.end=new_end
-    
+        self.end=new_end    
     def get_label(self):
         """Return the label string.
 
@@ -52,8 +51,7 @@ class Edge:
             self.end(object): Returns the node object pointed 
             to by self.end
         """
-        return self.end
-        
+        return self.end    
     def get_start_label(self):
         """Return the start node's label.
 
@@ -71,7 +69,6 @@ class Edge:
             pointed to by self.end
         """
         return str(self.end.get_label())
-    
     def equals(self, edge2):
         """Compares to edge objects based on their start and end nodes. 
         
@@ -86,8 +83,7 @@ class Edge:
         if (self.get_start()==edge2.get_start() or self.get_start()==edge2.get_end()):
             return (self.get_end()==edge2.get_end() or self.get_end()==edge2.get_start())
         else:
-            return False
-        
+            return False       
     def is_unique(self, edges):
         """Compares a given edge to all edges in the edge_list from the main module. 
         If it is not equal to any edge in the list then it is unique.
@@ -101,8 +97,7 @@ class Edge:
         for i in edges:
             if self.equals(i):
                 return False
-        return True 
-    
+        return True
     def contains(self, node):
         """Checks an edge for whether or not it contains a given node.
 
@@ -114,7 +109,6 @@ class Edge:
             matches the given nodeLable. False if not.
         """
         return node==self.get_start() or node==self.get_end()
-    
     def swap_ends(self, new_end):
         """Replaces the current end node of the edge with 
         the designated new_end
@@ -128,3 +122,4 @@ class Edge:
         cur_end=self.get_end()
         self.set_end(new_end)
         return cur_end
+    

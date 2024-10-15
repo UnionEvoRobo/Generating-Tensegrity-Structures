@@ -1,0 +1,103 @@
+ \documentclass[11pt]{article}
+%\usepackage{epsf}
+%\usepackage{psfig}
+\usepackage{graphicx}
+\special{papersize=8.5in,11in}		% Hey dvips, this is America!
+\setlength{\oddsidemargin}{0in}		% Actual left margin - 1 inch. 
+\setlength{\evensidemargin}{0in}	% Ditto.                       
+\setlength{\textwidth}{6.5in}		% Line length.                 
+\setlength{\marginparwidth}{0.5in}	% Width of margin remarks.
+\setlength{\topmargin}{0in}		% Actual top margin - 1 inch.
+\setlength{\headheight}{0in}		% No page headers.
+\setlength{\headsep}{0in}		% Space between head and body. 
+\setlength{\textheight}{9.1in}		% Body height (incl. footnotes).
+\setlength{\footskip}{0.3in}		% Space between footnotes.
+\setlength{\baselineskip}{16pt minus 1pt}	% Space betwen lines.
+\setlength{\parskip}{3pt plus1pt minus.5pt}	% Space between paragraphs.
+\begin{document}
+\ \\
+\newcommand{\mrk}{Keijzer}
+\newcommand{\rab}{``{\em Representation and Behavior}''}
+\begin{center}
+\Large Evolving Robustly Buildable Assembly Procedures\\
+
+John Rieffel and Jordan Pollack
+\end{center}
+
+\section{Introduction}
+\section{Theory and Background}
+\section{Experiments}
+\section{Conclusion}
+Natural embryogenic processes unfold in a world which is intrinsically
+stochastic and noisy.  When genotypes are given multiple opportunities
+to embryogenically produce a phenotype,  it would seem that a noisy
+embryogenic environment would cause significant variation on the set of
+phenotypes that result.  Yet, the world is full of genotypes and
+embryogenic systems (genotype plus embryogeny) that reliably achieve
+extremly complex designs.  
+
+In the context Evolution of Design, approaches using embryogenic
+models, in which the genome is seen as an assembly plan for the
+construction of a physical desigh,  have successfully achieved
+complex design (cf. Hornby, Bongard et al), but are blind to the
+prospect of noisy assembly, and hence brittle in its presence.  The
+problem of creating assembly procedures that are robust to noisy
+assembly is thus presented.
+
+If noise during assembly imposes a distribution on the structures that 
+result from a single assembly plan, the goal is to develop assembly
+plans that are robust to this noise.  {\em Robustness} in an assembly
+plan is the property of being able to consistently produce
+satisfactory results over the course of multiple nondeterministic
+constructions. Robustness {\em does not} require that all of an assembly
+plan's satisfactory results be similar in some external subjective
+sense, i.e. similar in structure, merely that they are comparably
+fit.
+
+Adding a simple extension to evolutionary approach of earlier efforts
+(the "algorithm" I described in the earlier post, in which each assembly
+plan is built into 100 results, and these results are then selected for
+over the standard objectives), I'd like to show, can result in assembly
+plans that are rubost in the face of noisy assembly without any explicit
+or external judgement (i.e. the "yield" metric I had been using before)
+of rubusticity.
+
+Introducing noise into the embrygenic model allows us to explore
+several important questions that lie at the intersection of
+evolutionary biology and evolution-of-design:
+
+- genome-as-blueprint vs. genome + environment (process) as
+(self-correcting) program
+
+- emergence of canalization
+
+- emergence of modularity as stabilizing/robusticizing agent in
+ontogenic development.
+
+- development of embrygenic ``checkpoints'' as ontogenic temporal
+module
+
+- build-time vs evol-time sensitivity (richard)
+
+-''inherently precise stochastic process''
+ 
+Shiva Sez:
+
+ The "genome-as-blueprint" is done away with completely. All that 
+   matters is that the participation of the genome in the physics of 
+   construction results in "fit" outcomes. When these "fit" outcomes
+   are structurally identical only then is the genome seemingly acting
+   as if it were a blueprint. So the "genome-as-blueprint" is really 
+   just a special case of a general one where the genome results in
+   functional offspring reliably. And the other extreme of this continuum 
+   is what your algorithm does at present, where it accepts all outcomes
+   independent of similarity or the lack of it.
+
+ Selection acts on individual phenotypes rather than on the NOMINAL or 
+   REPRESENTATIVE individual computed using heuristic statistical 
+   measures on populations of individuals from the same genome. 
+
+
+\bibliography{mybib}
+\bibliographystyle{plain}
+\end{document}
