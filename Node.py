@@ -4,8 +4,6 @@
 @version: 2.0
 """
 
-import copy
-
 class Node:
     """Node class for the generation of complex tensegrity structures."""
 
@@ -34,8 +32,7 @@ class Node:
         Returns:
             list: list of all adjacent nodes
         """
-        return copy.deepcopy(self.adjacent)
-
+        return self.adjacent
     def set_bracket(self, bracket_type):
         """Set the bracket field type.
 
@@ -43,7 +40,6 @@ class Node:
             bracket_type (string): bracket type indicated by a rule
         """
         self.bracket=bracket_type
-
     def get_bracket(self):
         """Return the bracket string
 

@@ -4,23 +4,66 @@ import os
 import time
 import random
 
+
+MAX_GRAPH_SIZE=4
+SAMPLE_RATE=None
+INIT_POP_SIZE=None
+MAX_GENS=None
+MAX_INT=2147483647
+
 class Algo:
-    
-    def __init__(self, samp_rate, init_pop_size, max_gen, in_file_name, dest_file_name, x_over, fitness, rend):
-        self.render=rend
+
+    def __init__ (self, in_file_name, do_log, randseed, render, seed):
+        """(self, samp_rate, init_pop_size, max_gen, in_file_name, dest_file_name, x_over, fitness, rend):
+        daf"""
+        self.render=render
+        self.config_file=in_file_name
+        self.random_seed=randseed
         self.pop=[]
-        self.world=Evaluator()
-        self.SAMPLE_RATE=samp_rate
-        self.INIT_POP_SIZE=init_pop_size
-        self.MAX_GENS=max_gen
-        self.CONFIG_FILE=in_file_name
-        self.out_file_name=dest_file_name
-        self.do_logging=None
-        self.x_over_rate=x_over
-        self.fitness_index=fitness
-        self.MAX_INT=2147483647
+        self.max_int=MAX_INT
+        self.init_pop_size=INIT_POP_SIZE
+        self.sample_rate=SAMPLE_RATE
+        self.max_gens=MAX_GENS
+        self.max_graph_size=MAX_GRAPH_SIZE
+        self.indexes_to_ignore=[]
+        self.x_over_rate=None
+        self.ls_mut_rate=None
+        self.mut_rate=None
+        self.fitness_index=None
+        self.do_logging=do_log
+        self.world=None
+        self.debug=None
+        self.init(seed)
+        #self.out_file_name=dest_file_name
+
 
     
+    def init(self, seed):
+        self.fscan_config()
+        
+        self.world=Evaluator()
+        
+        prev_best=0
+        self.pop=[]
+        num_added=0
+        
+        print(f"init pop size is: {self.init_pop_size}.")
+        while num_added<self.init_pop_size:
+            tens=None
+            if seed is None:
+                tens=Tensegrity({},[],None)
+            else:
+                tens=Tensegrity(None,None,None,seed)
+                tens.find_random_string_labels()
+            if self.pop.count(tens)!=0:
+                print("IM CONFUSED!!!!")
+                #delete tens !!!!!! delete it from the pop???
+            else:
+                self.pop.append(tens)
+                num_added+=1
+        self.debug=0
+        self.evaluate_pop()
+        
     def delete_ith_member(self, i):
         if self.pop[i] != None:
             print(f"deleting {i}")
@@ -36,22 +79,22 @@ class Algo:
             return -1    
     
     def add_new_members(self, cur_gen):
-        orig_pop_size = self.pop.size()
+        orig_pop_size=len(self.pop)
         p1_index = 0
         p2_index = 0
         num_added = 0
-        New_Pop_Limit = 0
+        New_Pop_Limit=0
         #Tensegrity *p1
         #Tensegrity *p2
         #Tensegrity *as1
         #Tensegrity *as2
         
-        as1_mut_worked = 0
-        as2_mut_worked = 0
+        as1_mut_worked=0
+        as2_mut_worked=0
 
         roulette_wheel = self.make_roulette(self.fitness_index)
         
-        while self.pop.size() < self.INIT_POP_SIZE:
+        while self.pop.size() < self.init_pop_size:
             if (self.x_over_rate==-1): #this is for purely random search
                 as1=Tensegrity() #hard coded for now
                 as2=Tensegrity()
@@ -158,8 +201,49 @@ class Algo:
     
     
     
-    
-    
+    def fscan_config(self):
+        with open(self.config_file,"r",encoding="utf-8") as in_file:
+
+            # the defaults
+            self.max_gens = 1000
+            self.init_pop_size= 100
+            self.x_over_rate = 60
+            self.ls_mut_rate =5
+            self.mut_rate = 2
+            self.sample_rate = 1
+            self.fitness_index = 3 #this is the index we care about
+
+            print(f"TPop.fscan_config() - filename is {self.config_file}")
+            if not in_file:
+                print(f"cannot open file {self.config_file} for input")
+                return -1
+            val=None
+            in_string=""
+            for line in in_file:
+                if line!=EOFError:
+                    line_split=line.split("=")
+                    in_string=line_split[0]
+                    val=line_split[1]
+                    match in_string:
+                        case "max_gens":
+                            self.max_gens=val
+                        case "init_pop_size":
+                            self.init_pop_size=val
+                        case "x_over_rate":
+                            self.x_over_rate=val
+                        case "ls_mut_rate":
+                            self.ls_mut_rate=val
+                        case "mut_rate":
+                            self.mut_rate=val
+                        case "sample_rate":
+                            self.sample_rate=val
+                        case "fitness_index":
+                            self.fitness_index=val
+                        case _:
+                            print(f"unrecognized input value to parse_config: {in_string}!")
+            in_file.close()
+            return 0
+
     def run(self):
         
         num_iters = 0
@@ -182,7 +266,7 @@ class Algo:
         
         if self.do_logging:
             while 1:
-                root_file_name=f"data_tmp/{num_of_day}-{tod.tm_hour}.{tod.tm_mday}.{tod.tm_mon}"
+                root_file_name=f"data_tmp/{num_of_day}-{tod.tm_hour}.{tod.tm_mday}.{tod.tm_mon}.{tod.tm_min}.{tod.tm_sec}"
                 out_file_name=f"{root_file_name}.gen"
                 best_file_name=f"{root_file_name}.best"
 
@@ -207,11 +291,11 @@ class Algo:
                 
         iter_Limit = 1000
         
-        while num_gens < self.MAX_GENS:
+        while num_gens < self.max_gens:
             self.sort_pop_by_fitness()
             self.maintain_diversity()
             self.cull_bottom_half()
-            if ((num_gens % self.SAMPLE_RATE) == 0):
+            if ((num_gens % self.sample_rate) == 0):
                 print(f"************ generation {num_gens} ********************\n")
                 self.fprint_pop_stats(num_gens)
                 self.fprint_best(best_file_name) 
@@ -271,7 +355,7 @@ class Algo:
             self.pop[max_index]=tmp
 
     def cull_bottom_half(self):
-        from_val=self.INIT_POP_SIZE/2
+        from_val=self.init_pop_size/2
         print(f"culling - from_val+1 is {from_val+1}, pop.size is: {self.pop.size()}")
         for i in range (from_val+1,self.pop.size()):
             self.delete_ith_member(i)
@@ -289,7 +373,7 @@ class Algo:
 #############################HELPER FUNCTIONS (my_utils)#############################
 
     def binom(self, prob):
-        t=(100.0*random.randint(0,self.MAX_INT)/(self.MAX_INT + 1.0))
+        t=(100.0*random.randint(0,self.max_int)/(self.max_int + 1.0))
         print(t)
         if (t < prob):
             return 1
@@ -297,7 +381,7 @@ class Algo:
             return 0
 
     def int_rand_in_range(self, range):
-        return (range*random.randint(0,self.MAX_INT)/(self.MAX_INT+1.0))
+        return (range*random.randint(0,self.max_int)/(self.max_int+1.0))
 
     def signed_to_unsigned(self, n, byte_count): 
         return int.from_bytes(n.to_bytes(byte_count, 'little', signed=True), 'little', signed=False)

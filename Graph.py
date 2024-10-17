@@ -6,6 +6,7 @@
 from transformer import Transformer
 from node import Node
 from edge import Edge
+from face import Face
 
 class Graph:
     """Graph class for the generation of complex tensegrity structures."""
@@ -15,9 +16,12 @@ class Graph:
         self.rules = rules
         self.transformer = Transformer(self)
         self.edge_list = []
-        self.node_list = []
+        self.node_list = [[] for i in range(50)]
+        #self.node_list = []
         self.bracket_nodes = []
         self.node_number = 0
+        self.cyclenumber=0
+        self.cycles=[[] for i in range(50)]
 
     def get_rule(self, key):
         """Getter for individual rules in the rule dictionary
@@ -104,7 +108,7 @@ class Graph:
         """
         node = Node(self.node_number)
         self.node_number += 1
-        self.node_list.append(node)
+        self.node_list[(self.node_number)-1]=node
         node.set_bracket(bracket)
         if node.get_bracket() is not None:
             self.bracket_nodes.append(node)
@@ -195,3 +199,75 @@ class Graph:
         """
         for node in self.node_list:
             node.clear_deg()
+
+    def get_edge(self,start,end):
+        for i in self.edge_list:
+            if i.contains(start) and i.contains(end):
+                return i
+        return None
+
+    def make_faces(self):
+        faces=[]
+        for n in self.node_list:
+            for nn in self.neighbors(n):
+                if self.node_list.index(nn)>self.node_list.index(n):
+                    face=Face()
+                    if self.get_edge(n,nn) is not None:
+                        face.add_edge(self.get_edge(n,nn))
+                    if faces.count(face)==0:
+                        faces.append(face)                  
+    
+    def dfs_cycle(self, u, p, color: list, par: list):
+        """aasdf"""
+        # already (completely) visited vertex.
+        if color[u] == 2:
+            return
+
+        # seen vertex, but was not
+        # completely visited -> cycle detected.
+        # backtrack based on parents to
+        # find the complete cycle.
+        if color[u] == 1:
+            v = []
+            cur = p
+            v.append(cur)
+
+            # backtrack the vertex which are
+            # in the current cycle thats found
+            while cur != u:
+                cur = par[cur]
+                v.append(cur)
+            self.cycles[self.cyclenumber] = v
+            self.cyclenumber += 1
+
+            return
+
+        par[u] = p
+
+        # partially visited.
+        color[u] = 1
+
+        # simple dfs on graph
+        n=self.node_list[u]
+        if n!=[]:
+            for v in self.node_list[u].get_adjacent():
+                vn=self.node_list.index(v)
+                # if it has not been visited previously
+                if vn == par[u]:
+                    continue
+                self.dfs_cycle(vn, u, color, par)
+
+        # completely visited.
+            color[u] = 2
+
+    def print_cycles(self):
+        """afd"""  
+        for i in range(0, self.cyclenumber):
+
+            # Print the i-th cycle
+            print(f"Cycle Number {i+1}:", end = " ")
+            for x in self.cycles[i]:
+                print(x, end = " ")
+            print()
+
+            

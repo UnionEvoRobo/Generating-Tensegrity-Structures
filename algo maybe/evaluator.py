@@ -4,7 +4,7 @@ from tens_string import Tens_String
 from MyObject import My_Object
 
 class Evaluator:
-    
+    """asdf"""
     def __init__ (self):
         self.elements=[]
         self.strings=[]
@@ -17,52 +17,52 @@ class Evaluator:
         self.DAMP_CONSTANT=None #REPLACE
         self.ANG_DAMP_CONSTANT=None #REPLACE
 
-    def d_joint_group_empty(self, group):
-        None
-    
-    def d_world_set_gravity(self, x, y, z):
-        None
-      
-    def d_body_disable(self, body):
-        None
-    
-    def d_body_enable(self, body):
-        None
-        
-    def atoi(self, label):
-        None
-    
-    def resetT15(self):
-        None
+    #def d_joint_group_empty(self, group):
+    #    None
+    #
+    #def d_world_set_gravity(self, x, y, z):
+    #    None
+    #
+    #def d_body_disable(self, body):
+    #    None
+    #
+    #def d_body_enable(self, body):
+    #    None
+    #
+    #def atoi(self, label):
+    #    None
+    #
+    #def resetT15(self):
+    #    None
+#
+    #def resetT3(self):
+    #    None
+#
+    #def resetT4(self):
+    #    None
+    #
+    #def d_body_add_force(self, body, drag0, drag1, drag2):
+    #    None
+#
+    #def d_body_add_torque(self, body, adrag0, adrag1, adrag2):
+    #    None
+#
+    #def center_of_mass(self, cur_pos):
+    #    None
+    #
+    #def d_body_get_linear_vel(self, body):
+    #    None
+#
+    #def d_body_get_angular_vel(self, body):
+    #    None
 
-    def resetT3(self):
-        None
 
-    def resetT4(self):
-        None
-    
-    def d_body_add_force(self, body, drag0, drag1, drag2):
-        None
-
-    def d_body_add_torque(self, body, adrag0, adrag1, adrag2):
-        None
-
-    def center_of_mass(self, cur_pos):
-        None
-        
-    def d_body_get_linear_vel(self, body):
-        None
-
-    def d_body_get_angular_vel(self, body):
-        None
-
-    
     def evaluate(self, tens, read_from_file, do_render, stop_on_flag):
         tens.f_print_genom("curnetwork.net")
         cur_tens=tens
         use_networks=0
         render=do_render
-        
+
         self.reset()
         result=1
         is_static=0
@@ -71,7 +71,7 @@ class Evaluator:
         self.reset_tens()
         self.update_string_labels(tens)
         self.copy_weights_to_elements(tens)
-        
+
         if result!=0:
             self.run_tensegrity(stop_on_flag,render)
             dt=self.distance_traveled(self.curr_COM)
