@@ -85,3 +85,7 @@ class Node:
         """
         self.adjacent.clear()
         
+        
+        
+    def set_element_num(self,num):
+        None

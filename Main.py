@@ -4,8 +4,9 @@
 @version: 5.0
 """
 
+from Graph import Graph
+#from make_tr3 import Tr3
 import graphviz  # doctest: +NO_EXE
-from graph import Graph
 from secondary_mutations import SecondaryMutations
 dot = graphviz.Digraph(comment='Tensegrity Object Graph')
 
@@ -21,7 +22,8 @@ class Main:
         the node and edge objects.
         """
         for i in self.graph.node_list:
-            dot.node(i.get_label())
+            if i!=[]:
+                dot.node(i.get_label())
         for i in self.graph.edge_list:
             dot.edge(i.get_start_label(), i.get_end_label(), i.get_label())
 
@@ -59,11 +61,15 @@ if __name__=='__main__':
     rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
     NUM_TRANS=4
     edge_types=["A","B","C","D","E"]
-    OUTPUT_NAME='standardOutput'
+    OUTPUT_NAME='dfs'
     main = Main(rule_dict,edge_types)
+    N=20
     main.graph.create_graph()
-    main.graph.transform(NUM_TRANS)
-    main.graph.generate_bracket_edges()
-    main.remove_extraneous_nodes()
+    #main.graph.transform(NUM_TRANS)
+    #main.graph.generate_bracket_edges()
+    #main.remove_extraneous_nodes()
+    #main.graph.make_faces()
     main.draw_graph()
+    main.graph.dfs_cycle(0, 0, ([0] * 20), ([0] * 20))
+    main.graph.print_cycles()
     dot.render(f'doctest-output/{OUTPUT_NAME}.gv').replace('\\', '/')

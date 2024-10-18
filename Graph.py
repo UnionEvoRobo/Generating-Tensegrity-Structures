@@ -44,6 +44,12 @@ class Graph:
         """
         return self.edge_types
 
+    def get_nodes(self):
+        return self.node_list
+    
+    def get_edges(self):
+        return self.edge_list
+
     def order(self):
         """Gives the order, or number of nodes, of the graph
 

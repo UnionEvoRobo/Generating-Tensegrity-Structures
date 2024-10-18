@@ -19,6 +19,40 @@ class Tensegrity:
         else:
             self.graph.transform(transformations)
         self.graph.generate_bracket_edges()
+        self.pairs=[]
     
     def f_print_genome(self, f_name):
         None
+    def print_genome(self):
+        None
+    
+    def crossover(self, tens1, tens2, another_var):
+        None
+        
+    def mutate(self):
+        return "HELLO"
+    
+    def find_random_string_labels(self):
+        None
+    
+    def f_print_string_labels(self, string_file_name):
+        None
+        
+    def length_of_genotype(self):
+        None
+    
+    def print_obj_vals(self):
+        None
+    
+    def fprint_obj_vals(self, out_file):
+        None
+        
+    def set_objectives(self, result):
+        None
+    
+    def get_objectives(self):
+        None
+    
+    def get_graph(self):
+        return self.graph
+    

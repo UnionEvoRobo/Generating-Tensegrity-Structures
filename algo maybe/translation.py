@@ -34,10 +34,10 @@ class Algo:
         self.world=None
         self.debug=None
         self.init(seed)
-        #self.out_file_name=dest_file_name
+        self.out_file_name=None
 
 
-    
+
     def init(self, seed):
         self.fscan_config()
         
@@ -63,9 +63,9 @@ class Algo:
                 num_added+=1
         self.debug=0
         self.evaluate_pop()
-        
+
     def delete_ith_member(self, i):
-        if self.pop[i] != None:
+        if self.pop[i] is not None:
             print(f"deleting {i}")
 
             
@@ -77,27 +77,24 @@ class Algo:
         else:
             print("Pop::delete_ith_member() - null")
             return -1    
-    
+
     def add_new_members(self, cur_gen):
         orig_pop_size=len(self.pop)
         p1_index = 0
         p2_index = 0
         num_added = 0
-        New_Pop_Limit=0
-        #Tensegrity *p1
-        #Tensegrity *p2
-        #Tensegrity *as1
-        #Tensegrity *as2
+        new_pop_limit=0
+
         
         as1_mut_worked=0
         as2_mut_worked=0
 
         roulette_wheel = self.make_roulette(self.fitness_index)
         
-        while self.pop.size() < self.init_pop_size:
+        while len(self.pop) < self.init_pop_size:
             if (self.x_over_rate==-1): #this is for purely random search
-                as1=Tensegrity() #hard coded for now
-                as2=Tensegrity()
+                as1=Tensegrity(None,None,None,None) #hard coded for now
+                as2=Tensegrity(None,None,None,None)
             else:   #normal xover or mutation.
                 #2 should be missing index or most relevant objective
                 #spin the wheel...
@@ -114,17 +111,17 @@ class Algo:
                 if (self.binom(self.x_over_rate) and (p1_index != p2_index)):
                     p1x1 = 0
 
-                    p1x1=self.int_rand_in_range(p1.lengthOfGenotype())
+                    p1x1=self.int_rand_in_range(p1.length_of_genotype())
 
-                    as1 =Tensegrity(p1)
+                    as1 =Tensegrity(None,None,None,p1)
                     as1.crossover(p1,p2,p1x1)
                     
-                    as2 =Tensegrity(p2)
+                    as2 =Tensegrity(None,None,None,p2)
                     as2.crossover(p2,p1,p1x1)
                 else: #we mutate
-                    as1 =Tensegrity(p1)
+                    as1 =Tensegrity(None,None,None,p1)
                     as1_mut_worked=as1.mutate()
-                    as2 =Tensegrity(p2)
+                    as2 =Tensegrity(None,None,None,p2)
                     as_2mut_worked = as2.mutate()
             #if as1 doesn't belong get rid of it.
             if not self.is_in_pop(as1):
@@ -135,20 +132,19 @@ class Algo:
                 self.evaluate_member(as2) # don't grow!
                 self.pop.append(as2)
                 num_added+=1
-    
+
     def print_pop(self):
         maxit=self.pop.size()
         for i in range (maxit):
             self.pop[i].print_obj_vals()
-    
+
     def fprint_pop_stats(self, gennum):
-        out_file=""
         with open(self.out_file_name,"a+",encoding="utf-8") as out_file:
             for i in range (self.size()):
                 out_file.append(f"{gennum}")
                 self.pop[i].fprint_obj_vals(out_file)
             out_file.close()
-        
+
     def fprint_best(self, fname):
         dot_file_name=""    
         dot_file_name=f"{fname}.net"
@@ -158,20 +154,20 @@ class Algo:
         string_file_name=f"{fname}.str"
         self.pop[0].f_print_string_labels(string_file_name)
         print("hello!")
-        result=self.world.evaluate(self.pop[0],0,0,0)
+        result=self.world.evaluate(self.pop[0],0,0)
         print(result)
         print("olleh!")
-        
+
     def evaluate_member(self, member):
-        result = self.world.evaluate(member,0,self.render,0)
+        result = self.world.evaluate(member,self.render,0)
         member.set_objectives(result)
-        
+
     def evaluate_pop(self):
         maxit=self.pop.size()
         for i in range (maxit):
             self.evaluate_member(self.pop[i])
-         
-    
+
+
 
     def make_roulette(self, index):
         """makes a roulette wheel by creating N entries 
@@ -267,7 +263,7 @@ class Algo:
         if self.do_logging:
             while 1:
                 root_file_name=f"data_tmp/{num_of_day}-{tod.tm_hour}.{tod.tm_mday}.{tod.tm_mon}.{tod.tm_min}.{tod.tm_sec}"
-                out_file_name=f"{root_file_name}.gen"
+                self.out_file_name=f"{root_file_name}.gen"
                 best_file_name=f"{root_file_name}.best"
 
                 temp_out=open(out_file_name,'r',encoding="utf-8")
@@ -295,10 +291,10 @@ class Algo:
             self.sort_pop_by_fitness()
             self.maintain_diversity()
             self.cull_bottom_half()
-            if ((num_gens % self.sample_rate) == 0):
+            if (num_gens % self.sample_rate) == 0:
                 print(f"************ generation {num_gens} ********************\n")
                 self.fprint_pop_stats(num_gens)
-                self.fprint_best(best_file_name) 
+                self.fprint_best(best_file_name)
                 self.print_pop()
             self.add_new_members(num_gens)
             num_gens+=1
@@ -308,11 +304,12 @@ class Algo:
         print("hello")
         to_delete=[]
         to_delete.clear()
-        for i in range (self.pop.size()):
+        i=0
+        while i<len(self.pop):
             vals=self.pop[i].get_objective_vals()
             cur_val=vals[self.fitness_index]
             for j in range ((i-5),0,-1):
-                print("maintain: i:{i} j:{j}")
+                print(f"maintain: i:{i} j:{j}")
                 other_vals=self.pop[j].get_objective_vals
                 other_val=other_vals[self.fitness_index]
                 if cur_val==other_val:
@@ -322,52 +319,49 @@ class Algo:
                     break
             i=j
         print("erasing...")
-        for i in range (len(to_delete)):
-            to_del=to_delete[i]
-            print(f"deleting {to_del}")            
+        for i in to_delete:
+            to_del=i
+            print(f"deleting {to_del}")
             self.pop.pop(to_del)
             print(f"and erasing {None}")
             #self.delete_ith_member(to_delete[i])
         print("done erasing")
 
     def is_in_pop(self, ts):
-        for i in range (self.pop.size()):
-            if ts.equals(self.pop[i]):
+        for i in self.pop:
+            if ts.equals(i):
                 return 1
         return 0
 
     def sort_pop_by_fitness(self):
-        for i in range (self.pop.size()):
-            cur_tens=self.pop[i]
+        for i in self.pop:
+            cur_tens=i
             cur_objs=cur_tens.get_objective_vals()
             max_val=cur_objs[self.fitness_index]
-            max_index=i
+            max_index=self.pop.index(i)
 
-            for j in range (self.pop.size()):
-                j_tens=self.pop[j]
+            for j in self.pop:
+                j_tens=j
                 job_js=j_tens.get_objective_vals()
                 cur_val=job_js[self.fitness_index]
                 if cur_val > max_val:
-                    max_index=j
+                    max_index=self.pop.index(j)
                     max_val=cur_val
-            tmp=self.pop[i]
-            self.pop[i]=self.pop[max_index]
+            tmp=i
+            i=self.pop[max_index]
             self.pop[max_index]=tmp
 
     def cull_bottom_half(self):
         from_val=self.init_pop_size/2
-        print(f"culling - from_val+1 is {from_val+1}, pop.size is: {self.pop.size()}")
-        for i in range (from_val+1,self.pop.size()):
+        print(f"culling - from_val+1 is {from_val+1}, pop.size is: {len(self.pop)}")
+        for i in range (from_val+1,len(self.pop)):
             self.delete_ith_member(i)
         print("done culling")
-        self.pop.resize(from_val)
+        self.pop=self.pop[0:from_val]
         print("done resizing")
 
-    
-        
-    
-       
-        
+
+
 
 
 #############################HELPER FUNCTIONS (my_utils)#############################
@@ -382,11 +376,3 @@ class Algo:
 
     def int_rand_in_range(self, range):
         return (range*random.randint(0,self.max_int)/(self.max_int+1.0))
-
-    def signed_to_unsigned(self, n, byte_count): 
-        return int.from_bytes(n.to_bytes(byte_count, 'little', signed=True), 'little', signed=False)
-    
-    
-    
-    
-    
