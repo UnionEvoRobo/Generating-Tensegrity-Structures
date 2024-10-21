@@ -4,7 +4,7 @@
 @version: 5.0
 """
 
-from Graph import Graph
+from graph import Graph
 #from make_tr3 import Tr3
 import graphviz  # doctest: +NO_EXE
 from secondary_mutations import SecondaryMutations
@@ -65,11 +65,8 @@ if __name__=='__main__':
     main = Main(rule_dict,edge_types)
     N=20
     main.graph.create_graph()
-    #main.graph.transform(NUM_TRANS)
-    #main.graph.generate_bracket_edges()
-    #main.remove_extraneous_nodes()
-    #main.graph.make_faces()
+    main.graph.transform(NUM_TRANS)
+    main.graph.generate_bracket_edges()
+    main.remove_extraneous_nodes()
     main.draw_graph()
-    main.graph.dfs_cycle(0, 0, ([0] * 20), ([0] * 20))
-    main.graph.print_cycles()
     dot.render(f'doctest-output/{OUTPUT_NAME}.gv').replace('\\', '/')

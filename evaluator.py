@@ -6,11 +6,11 @@ from element import Element
 from tens_string import Tens_String
 from MyObject import My_Object
 
-WEIGHTS_PER_NET=0 #REPLACE
-DAMP_CONSTANT=None #REPLACE
-ANG_DAMP_CONSTANT=None #REPLACE
-DAMP_CONSTANT=None #REPLACE
-ANG_DAMP_CONSTANT=None #REPLACE
+WEIGHTS_PER_NET=9 #REPLACE
+DAMP_CONSTANT=6 #REPLACE
+ANG_DAMP_CONSTANT=15 #REPLACE
+DAMP_CONSTANT=1 #REPLACE
+ANG_DAMP_CONSTANT=10 #REPLACE
 MAX_INT=2147483647
 
 
@@ -153,7 +153,7 @@ class Evaluator:
 
     def evaluate(self, tens, do_render, stop_on_flag):
         """ADSF"""
-        tens.f_print_genom("curnetwork.net")
+        tens.f_print_genome("curnetwork.net")
         #cur_tens=tens
         #use_networks=0
         render=do_render
@@ -194,7 +194,7 @@ class Evaluator:
 
     def make_from_tensegrity(self, ints, is_static):
         """ADSF"""
-        return self.make_from_graph(ints.graph(),ints.pairs,is_static)
+        return self.make_from_graph(ints.get_graph(),ints.pairs,is_static)
 
     def make_from_graph(self, graph, rods, is_static):
         """ADSF"""
@@ -207,7 +207,8 @@ class Evaluator:
 
         if len(rods)!=len(graph_nodes):
             return 0
-        for i in range (rods.size()):
+        for i in rods:
+            ind=rods.index(i)
             #found=already_made[already_made.index(rods[i])]
 
             x=True
@@ -215,20 +216,20 @@ class Evaluator:
             #if (found == alreadyMade.end()):
 
 
-                bottom=i
-                top=rods[i]
+                bottom=ind
+                top=i
                 node_element_matches.append(graph_nodes[bottom])
                 node_element_matches.append(graph_nodes[top])
+                already_made.append(ind)
                 already_made.append(i)
-                already_made.append(rods[i])
 
-                if i==0:
-                    self.put_capsule(0.5,0.5,((Element.elem_unit_len/2)+(Element.elem_unit_rad*2)))
+                if ind==0:
+                    self.put_capsule(0.5,0.5,((Element.ELEM_UNIT_LEN/2)+(Element.ELEM_UNIT_RAD*2)))
                 elif not is_static:
                     self.put_capsule(0,0,0)
                 else:
                     print("making in static positions")
-                    self.put_capsule((0.5*i+0.5),(0.5*i+0.5),(0.5*i+0.5))
+                    self.put_capsule((0.5*ind+0.5),(0.5*ind+0.5),(0.5*ind+0.5))
                 cur_obj=self.objvect[(self.objvect)-1]
                 elem1=Element(cur_obj.body)
                 self.elements.append(elem1)
@@ -284,16 +285,16 @@ class Evaluator:
 
     def update_string_labels(self, tens):
         """ADSF"""
-        t_graph=tens.graph()
+        t_graph=tens.get_graph()
         graph_edges=t_graph.get_edges()
         for s in self.strings:
             s.set_rod_number(int(graph_edges[self.strings.index(s)].get_label()))
 
     def copy_weights_to_elements(self, tens):
         """ADSF"""
-        t_vals=tens.genome()
+        t_vals=tens.get_genome()
         el_vals=[]
-        size_of_tens=t_vals.size()/WEIGHTS_PER_NET
+        size_of_tens=len(t_vals)/WEIGHTS_PER_NET
         if size_of_tens != len(self.elements):
             print("copyWeights has a size problem!")
             for e in self.elements:
@@ -538,7 +539,7 @@ class Evaluator:
         if x==0. and y==0. and z==0.:
             self.d_body_set_position(new_obj.set_body,random.randint(0,MAX_INT)*2-1,
                                      random.randint(0,2-1),
-                                     Element.elem_unit_len/2+Element.elem_unit_rad*2)
+                                     Element.ELEM_UNIT_LEN/2+Element.ELEM_UNIT_RAD*2)
             self.d_r_from_axis_and_angle(r,random.randint(0,MAX_INT)*2.0-1.0,
                                          random.randint(0,MAX_INT)*2.0-1.0,
                                          random.randint(0,MAX_INT)*2.0-1.0,
@@ -550,11 +551,11 @@ class Evaluator:
             self.d_body_set_rotation(new_obj.body,r)
 
 
-        #for (k=0; k<3; k++) sides[k] = _ELEM_UNIT_LEN;
+        for k in range (3):
+            sides.insert(k,Element.ELEM_UNIT_LEN)
 
 
-        sides[0]=Element.elem_unit_rad
-
+        sides.insert(0,Element.ELEM_UNIT_RAD)
 
         #dMassSetCapsule (&m,DENSITY,3,sides[0],sides[1]);
 

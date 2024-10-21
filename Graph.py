@@ -1,12 +1,13 @@
 """Graph class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
+
+import random
 from transformer import Transformer
 from node import Node
 from edge import Edge
-from face import Face
 
 class Graph:
     """Graph class for the generation of complex tensegrity structures."""
@@ -16,12 +17,9 @@ class Graph:
         self.rules = rules
         self.transformer = Transformer(self)
         self.edge_list = []
-        self.node_list = [[] for i in range(50)]
-        #self.node_list = []
-        self.bracket_nodes = []
-        self.node_number = 0
-        self.cyclenumber=0
-        self.cycles=[[] for i in range(50)]
+        self.node_list = []
+        self.bracket_nodes=[]
+        self.node_number=0
 
     def get_rule(self, key):
         """Getter for individual rules in the rule dictionary
@@ -45,9 +43,19 @@ class Graph:
         return self.edge_types
 
     def get_nodes(self):
+        """Getter for the list of the graphs nodes
+
+        Returns:
+            list: list containing all nodes in the graph
+        """
         return self.node_list
-    
+
     def get_edges(self):
+        """Getter for the list of the graphs edges
+
+        Returns:
+            list: list containing all edges in the graph
+        """
         return self.edge_list
 
     def order(self):
@@ -114,7 +122,7 @@ class Graph:
         """
         node = Node(self.node_number)
         self.node_number += 1
-        self.node_list[(self.node_number)-1]=node
+        self.node_list.append(node)
         node.set_bracket(bracket)
         if node.get_bracket() is not None:
             self.bracket_nodes.append(node)
@@ -206,74 +214,131 @@ class Graph:
         for node in self.node_list:
             node.clear_deg()
 
-    def get_edge(self,start,end):
+    def get_edge(self,node1,node2):
+        """Getter for a specific edge in the graph
+
+        Args:
+            node1 (Node): One of the nodes that the desired edge must contain
+            node2 (Node): One of the nodes that the desired edge must contain
+
+        Returns:
+            Edge: the edge in the graph containing both of the specified nodes.
+            If not found, returns None
+        """
         for i in self.edge_list:
-            if i.contains(start) and i.contains(end):
+            if i.contains(node1) and i.contains(node2):
                 return i
         return None
 
-    def make_faces(self):
-        faces=[]
-        for n in self.node_list:
-            for nn in self.neighbors(n):
-                if self.node_list.index(nn)>self.node_list.index(n):
-                    face=Face()
-                    if self.get_edge(n,nn) is not None:
-                        face.add_edge(self.get_edge(n,nn))
-                    if faces.count(face)==0:
-                        faces.append(face)                  
-    
-    def dfs_cycle(self, u, p, color: list, par: list):
-        """aasdf"""
-        # already (completely) visited vertex.
-        if color[u] == 2:
-            return
+    def make_tr3(self):
+        """Create the graph of a starter 3 bar tensegrity"""
+        while self.node_number < 6:
+            self.add_node(None)
 
-        # seen vertex, but was not
-        # completely visited -> cycle detected.
-        # backtrack based on parents to
-        # find the complete cycle.
-        if color[u] == 1:
-            v = []
-            cur = p
-            v.append(cur)
+        self.add_edge('3',self.node_list[0],self.node_list[1])
+        self.add_edge('3',self.node_list[1],self.node_list[2])
+        self.add_edge('3',self.node_list[2],self.node_list[0])
+        self.add_edge('1',self.node_list[3],self.node_list[4])
+        self.add_edge('3',self.node_list[4],self.node_list[5])
+        self.add_edge('5',self.node_list[5],self.node_list[3])
+        self.add_edge('2',self.node_list[4],self.node_list[0])
+        self.add_edge('4',self.node_list[5],self.node_list[1])
+        self.add_edge('1',self.node_list[3],self.node_list[2])
 
-            # backtrack the vertex which are
-            # in the current cycle thats found
-            while cur != u:
-                cur = par[cur]
-                v.append(cur)
-            self.cycles[self.cyclenumber] = v
-            self.cyclenumber += 1
+    def grow_while_connecting_rods(self, size, print_intermed):
+        """Grows an initial graph using the indicated l_system and size parameters
 
-            return
+        Args:
+            size (int): Number of iterations through the transformer
+            print_intermed (boolean): Whether or not the method should 
+                                    print intermediate stages of graph growth
 
-        par[u] = p
+        Returns:
+            boolean: _description_
+        """
+        ####    USE THE TRANSFORMER HERE!!!!!   ####
+        if print_intermed:
+            print("INTERMEDIATE GRAPH PRINTS HERE {size} times")
+            return size
+        return False
 
-        # partially visited.
-        color[u] = 1
+    def simplify_graph(self):
+        """Removes all nodes that have less than 3 edges 
+        beginning and ending at its location.
+        """
 
-        # simple dfs on graph
-        n=self.node_list[u]
-        if n!=[]:
-            for v in self.node_list[u].get_adjacent():
-                vn=self.node_list.index(v)
-                # if it has not been visited previously
-                if vn == par[u]:
-                    continue
-                self.dfs_cycle(vn, u, color, par)
+        ####    SEE IF THIS CAN BE IMPROVED!!!!!   ####
 
-        # completely visited.
-            color[u] = 2
+        loop=True
+        while loop and len(self.node_list)!=0:
+            goodbye_edges=[]
+            goodbye_nodes=[]
+            loop=False
+            for node in self.node_list:
+                if node.is_extraneous():
+                    loop=True
+                    goodbye_nodes.append(node)
+                    for edge in self.edge_list:
+                        if edge.contains(node) and goodbye_edges.count(edge)==0:
+                            goodbye_edges.append(edge)
+            for i in goodbye_nodes:
+                self.remove_node(i)
+            for i in goodbye_edges:
+                self.remove_edge(i.get_start(),i.get_end())
 
-    def print_cycles(self):
-        """afd"""  
-        for i in range(0, self.cyclenumber):
+    def find_random_string_labels(self):
+        """Reassigns the lables of strings in the graph
+        """
+        for i in self.node_list:
+            self.assign_random_label_for_edges_to_node(i)
 
-            # Print the i-th cycle
-            print(f"Cycle Number {i+1}:", end = " ")
-            for x in self.cycles[i]:
-                print(x, end = " ")
-            print()
+    def assign_random_label_for_edges_to_node(self, node):
+        """Reassigns the lables of strings connected to the given node.
+        """
+        edges=self.get_node_edges(node)
+        if edges is not None:
+            stay_in=True
+            for e in edges:
+                if int(e.get_label())==node.get_label():
+                    e.change_label(-1)
+            tries=0
+            while stay_in and tries<=5*len(edges):
+                tries+=1
+                rand_ex=random.randint(0,(len(edges)-1))
+                rand_edge=edges[rand_ex]
+                if int(rand_edge.get_label()==-1):
+                    rand_edge.change_label(-1)
+                stay_in=False
 
-            
+    def get_node_edges(self, node):
+        """Get the list of all edges containing the given node
+
+        Args:
+            node (Node): the node being inspected
+
+        Returns:
+            list: the list of all edges in graph that contains the given node
+        """
+        ret=[]
+        if node!=[]:
+            for i in self.neighbors(node):
+                edge=self.get_edge(node,i)
+                if edge is not None:
+                    ret.append(edge)
+            if not ret:
+                return None
+            return ret
+
+    def get_string_labels(self):
+        """Return a list of the labels of all edges
+        """
+        ret=[]
+        for i in self.edge_list:
+            ret.append(i.get_label())
+        return ret
+
+    def mutate_string_labels(self):
+        """Change the label of a string in the graph at random
+        """
+        randnode = random.randint(0,self.node_number)
+        self.assign_random_label_for_edges_to_node(self.node_list[randnode])

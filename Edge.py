@@ -26,7 +26,7 @@ class Edge:
             new_start (Node): The node intended as the 
             ending location of the edge
         """
-        self.end=new_end    
+        self.end=new_end
     def get_label(self):
         """Return the label string.
 
@@ -51,7 +51,7 @@ class Edge:
             self.end(object): Returns the node object pointed 
             to by self.end
         """
-        return self.end    
+        return self.end
     def get_start_label(self):
         """Return the start node's label.
 
@@ -82,8 +82,7 @@ class Edge:
         """
         if (self.get_start()==edge2.get_start() or self.get_start()==edge2.get_end()):
             return (self.get_end()==edge2.get_end() or self.get_end()==edge2.get_start())
-        else:
-            return False       
+        return False
     def is_unique(self, edges):
         """Compares a given edge to all edges in the edge_list from the main module. 
         If it is not equal to any edge in the list then it is unique.
@@ -122,4 +121,10 @@ class Edge:
         cur_end=self.get_end()
         self.set_end(new_end)
         return cur_end
-    
+    def change_label(self, new_label):
+        """Change the label of the edge to a new value.
+
+        Args:
+            new_label (_type_): the new contents for self.label
+        """
+        self.label=new_label

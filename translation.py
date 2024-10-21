@@ -1,59 +1,62 @@
-from tensegrity import Tensegrity
-from evaluator import Evaluator
+"""asdf"""
+
 import os
 import time
 import random
-
+from evaluator import Evaluator
+from tensegrity import Tensegrity
 
 MAX_GRAPH_SIZE=4
-SAMPLE_RATE=None
-INIT_POP_SIZE=None
-MAX_GENS=None
 MAX_INT=2147483647
+EDGES=["1","2","3","4","5"]
+
 
 class Algo:
-
-    def __init__ (self, in_file_name, do_log, randseed, render, seed):
-        """(self, samp_rate, init_pop_size, max_gen, in_file_name, dest_file_name, x_over, fitness, rend):
-        daf"""
+    """asdf"""
+    def __init__ (self, in_file_name, do_log, render, seed):
         self.render=render
-        self.config_file=in_file_name
-        self.random_seed=randseed
         self.pop=[]
-        self.max_int=MAX_INT
-        self.init_pop_size=INIT_POP_SIZE
-        self.sample_rate=SAMPLE_RATE
-        self.max_gens=MAX_GENS
-        self.max_graph_size=MAX_GRAPH_SIZE
-        self.indexes_to_ignore=[]
+        self.init_pop_size=None
+        self.sample_rate=None
+        self.max_gens=None
+        #self.max_graph_size=MAX_GRAPH_SIZE     #UNECESSARY???
+        #self.indexes_to_ignore=[]     #UNECESSARY???
         self.x_over_rate=None
         self.ls_mut_rate=None
         self.mut_rate=None
         self.fitness_index=None
         self.do_logging=do_log
         self.world=None
-        self.debug=None
-        self.init(seed)
+        #self.debug=None    #UNECESSARY???
+        self.init(in_file_name,seed)
         self.out_file_name=None
 
 
 
-    def init(self, seed):
-        self.fscan_config()
-        
+    def init(self, config, seed):
+        """Initializes the population and reads in the config file
+
+        Args:
+            config (string): path for the config file
+            seed (Tensegrity): tensegrity seed to start the population with
+        """
+        self.fscan_config(config)
+
         self.world=Evaluator()
-        
-        prev_best=0
+
+        #prev_best=0
         self.pop=[]
         num_added=0
-        
+
         print(f"init pop size is: {self.init_pop_size}.")
         while num_added<self.init_pop_size:
             tens=None
             if seed is None:
-                tens=Tensegrity({},[],None)
+                tens=Tensegrity(EDGES,None)
+                tens.make_tr3()
             else:
-                tens=Tensegrity(None,None,None,seed)
+                tens=Tensegrity(EDGES,seed)
+                tens.make_tr3()
                 tens.find_random_string_labels()
             if self.pop.count(tens)!=0:
                 print("IM CONFUSED!!!!")
@@ -61,40 +64,52 @@ class Algo:
             else:
                 self.pop.append(tens)
                 num_added+=1
-        self.debug=0
+        #self.debug=0   #UNECESSARY???
         self.evaluate_pop()
 
     def delete_ith_member(self, i):
+        """Deletes the ith member of the current population
+
+        Args:
+            i (int): index of the to-be-deleted member within the population
+
+        Returns:
+            boolean: True if member deleted, False if member not found
+        """
         if self.pop[i] is not None:
             print(f"deleting {i}")
 
-            
+
                         #delete pop[to_del]
-            
-            
-            self.pop[i]=None
-            return 0
+
+            self.pop.pop(i)
+            #self.pop[i]=None
+            return True
         else:
             print("Pop::delete_ith_member() - null")
-            return -1    
+            return False
 
-    def add_new_members(self, cur_gen):
-        orig_pop_size=len(self.pop)
+    def add_new_members(self):  #add_new_members(self, cur_gen)
+        """Add new members to the population
+        """
+        #orig_pop_size=len(self.pop)
         p1_index = 0
         p2_index = 0
         num_added = 0
-        new_pop_limit=0
+        #new_pop_limit=0
 
-        
-        as1_mut_worked=0
-        as2_mut_worked=0
+
+        #as1_mut_worked=0
+        #as2_mut_worked=0
 
         roulette_wheel = self.make_roulette(self.fitness_index)
-        
+
         while len(self.pop) < self.init_pop_size:
-            if (self.x_over_rate==-1): #this is for purely random search
-                as1=Tensegrity(None,None,None,None) #hard coded for now
-                as2=Tensegrity(None,None,None,None)
+            if self.x_over_rate==-1: #this is for purely random search
+                as1=Tensegrity(EDGES,None) #hard coded for now
+                as2=Tensegrity(EDGES,None)
+                as1.make_tr3()
+                as2.make_tr3()
             else:   #normal xover or mutation.
                 #2 should be missing index or most relevant objective
                 #spin the wheel...
@@ -107,22 +122,26 @@ class Algo:
                 #random.randrange(len(roulette_wheel))
                 p2_val=self.int_rand_in_range(len(roulette_wheel))
                 p2index=roulette_wheel[p2_val]
-                p2=self.pop[p2index] 
+                p2=self.pop[p2index]
                 if (self.binom(self.x_over_rate) and (p1_index != p2_index)):
                     p1x1 = 0
 
                     p1x1=self.int_rand_in_range(p1.length_of_genotype())
 
-                    as1 =Tensegrity(None,None,None,p1)
+                    as1 =Tensegrity(EDGES,p1)
+                    as1.make_tr3()
                     as1.crossover(p1,p2,p1x1)
-                    
-                    as2 =Tensegrity(None,None,None,p2)
+
+                    as2 =Tensegrity(EDGES,p2)
+                    as2.make_tr3()
                     as2.crossover(p2,p1,p1x1)
                 else: #we mutate
-                    as1 =Tensegrity(None,None,None,p1)
-                    as1_mut_worked=as1.mutate()
-                    as2 =Tensegrity(None,None,None,p2)
-                    as_2mut_worked = as2.mutate()
+                    as1 =Tensegrity(EDGES,p1)
+                    as1.make_tr3()
+                    as1.mutate()    #as1_mut_worked=as1.mutate()
+                    as2 =Tensegrity(EDGES,p2)
+                    as2.make_tr3()
+                    as2.mutate()    #as2_mut_worked=as2.mutate()
             #if as1 doesn't belong get rid of it.
             if not self.is_in_pop(as1):
                 self.evaluate_member(as1) #don't grow!
@@ -134,19 +153,27 @@ class Algo:
                 num_added+=1
 
     def print_pop(self):
+        """Print the population"""
         maxit=self.pop.size()
         for i in range (maxit):
             self.pop[i].print_obj_vals()
 
     def fprint_pop_stats(self, gennum):
+        """Write the generation number and each member 
+        of the populations objectives to the out_file
+
+        Args:
+            gennum (int): Current generation number
+        """
         with open(self.out_file_name,"a+",encoding="utf-8") as out_file:
-            for i in range (self.size()):
+            for i in self.pop:
                 out_file.append(f"{gennum}")
-                self.pop[i].fprint_obj_vals(out_file)
+                i.fprint_obj_vals(out_file)
             out_file.close()
 
     def fprint_best(self, fname):
-        dot_file_name=""    
+        """UNCLEAR AS OF WRITING"""
+        dot_file_name=""
         dot_file_name=f"{fname}.net"
         self.pop[0].f_print_genome(dot_file_name)
         self.pop[0].print_genome()
@@ -159,15 +186,15 @@ class Algo:
         print("olleh!")
 
     def evaluate_member(self, member):
+        """Evaluate an individual member of the population"""
         result = self.world.evaluate(member,self.render,0)
         member.set_objectives(result)
 
     def evaluate_pop(self):
-        maxit=self.pop.size()
-        for i in range (maxit):
-            self.evaluate_member(self.pop[i])
-
-
+        """Evaluate the current population
+        """
+        for i in self.pop:
+            self.evaluate_member(i)
 
     def make_roulette(self, index):
         """makes a roulette wheel by creating N entries 
@@ -181,24 +208,35 @@ class Algo:
         same, but for a given index, not just num children"""
         roul=[]
         roul.clear()
-        use_funky_roulette=0 #funky roulette is for objectives that you're trying to minimize
-        min_biomass=0.
+        #use_funky_roulette=0 #funky roulette is for objectives that you're trying to minimize
+        #min_biomass=0.
         for i in range (self.pop.size()):
             #calculate the sum of fitnesses across this index
             objs=self.pop[i].get_objective_vals()
             roulettechunk=objs[index]*100
-        
-        #use this for maximizing    
-        #make a number of roulette slots proportional to your biomass    
-        for j in range (roulettechunk):
+
+        #use this for maximizing
+        #make a number of roulette slots proportional to your biomass
+        j=0
+        while j<roulettechunk:
             roul.append(i)
+            j+=1
         return roul
 
-    
-    
-    
-    def fscan_config(self):
-        with open(self.config_file,"r",encoding="utf-8") as in_file:
+
+
+
+    def fscan_config(self, config):
+        """Scan the given config file and sets attribute parameters for the population
+
+        Args:
+            config (string): path for the config file
+
+
+        Returns:
+            boolean: True if configurations are set, False if config file cannot be opened
+        """
+        with open(config,"r",encoding="utf-8") as in_file:
 
             # the defaults
             self.max_gens = 1000
@@ -209,10 +247,10 @@ class Algo:
             self.sample_rate = 1
             self.fitness_index = 3 #this is the index we care about
 
-            print(f"TPop.fscan_config() - filename is {self.config_file}")
+            print(f"TPop.fscan_config() - filename is {config}")
             if not in_file:
-                print(f"cannot open file {self.config_file} for input")
-                return -1
+                print(f"cannot open file {config} for input")
+                return False
             val=None
             in_string=""
             for line in in_file:
@@ -238,28 +276,29 @@ class Algo:
                         case _:
                             print(f"unrecognized input value to parse_config: {in_string}!")
             in_file.close()
-            return 0
+            return True
 
     def run(self):
-        
-        num_iters = 0
+        """Run evolution and evaluation cycles over the population
+        """
+        #num_iters = 0
         num_gens = 0
-        
+
         rand_seed = int(time.time())
-        
+
         #if _rand_seed==0:
         #    _rand_seed=self.signed_to_unsigned(rand_seed,4)
         print(f"Random Seed is: {rand_seed}")
         random.seed(rand_seed)
-        
+
         tod=time.localtime(rand_seed)
-        
+
         num_of_day=0
-        
+
         root_file_name=""
         out_file_name=""
         best_file_name=""
-        
+
         if self.do_logging:
             while 1:
                 root_file_name=f"data_tmp/{num_of_day}-{tod.tm_hour}.{tod.tm_mday}.{tod.tm_mon}.{tod.tm_min}.{tod.tm_sec}"
@@ -275,32 +314,33 @@ class Algo:
 
             print(f"genfile is: {out_file_name}")
             print(f"bestfile is: {best_file_name}")
-            
+
             sys_cmd=""
-            
+
             sys_cmd=f"ln -s -f {out_file_name} gen.latest.$HOSTNAME"
             if os.system(sys_cmd)!=0:
                 print("Error linking data file!")
             sys_cmd=f"ln -s -f {best_file_name} best.latest.$HOSTNAME"
             if os.system(sys_cmd)!=0:
                 print("Error linking data file!")
-                
-        iter_Limit = 1000
-        
+
+        #iter_Limit = 1000
+
         while num_gens < self.max_gens:
             self.sort_pop_by_fitness()
             self.maintain_diversity()
             self.cull_bottom_half()
             if (num_gens % self.sample_rate) == 0:
-                print(f"************ generation {num_gens} ********************\n")
+                print(f"************ generation {num_gens} ********************")
                 self.fprint_pop_stats(num_gens)
                 self.fprint_best(best_file_name)
                 self.print_pop()
-            self.add_new_members(num_gens)
+            self.add_new_members()  #self.add_new_members(num_gens)
             num_gens+=1
-            num_iters=num_gens
+            #num_iters=num_gens
 
     def maintain_diversity(self):
+        """Aids in curating members of the current population"""
         print("hello")
         to_delete=[]
         to_delete.clear()
@@ -310,7 +350,7 @@ class Algo:
             cur_val=vals[self.fitness_index]
             for j in range ((i-5),0,-1):
                 print(f"maintain: i:{i} j:{j}")
-                other_vals=self.pop[j].get_objective_vals
+                other_vals=self.pop[j].get_objective_vals()
                 other_val=other_vals[self.fitness_index]
                 if cur_val==other_val:
                     print(f"{cur_val} == {other_val}, will delete {j}")
@@ -328,12 +368,19 @@ class Algo:
         print("done erasing")
 
     def is_in_pop(self, ts):
-        for i in self.pop:
-            if ts.equals(i):
-                return 1
-        return 0
+        """Checks if a tensegrity is in the current population
+
+        Args:
+            ts (Tensegrity): the tensegrity being searched for
+
+        Returns:
+            boolean: True if the tensegrity is found. False if not,
+        """
+        return self.pop.count(ts)
 
     def sort_pop_by_fitness(self):
+        """Sort the population according to how well the evaluate in 
+        relation to the fitness parameters"""
         for i in self.pop:
             cur_tens=i
             cur_objs=cur_tens.get_objective_vals()
@@ -352,7 +399,10 @@ class Algo:
             self.pop[max_index]=tmp
 
     def cull_bottom_half(self):
-        from_val=self.init_pop_size/2
+        """Removes the len(self.pop)/2 least fit members of the population
+        """
+        from_val=len(self.pop)/2
+        #from_val=self.init_pop_size/2
         print(f"culling - from_val+1 is {from_val+1}, pop.size is: {len(self.pop)}")
         for i in range (from_val+1,len(self.pop)):
             self.delete_ith_member(i)
@@ -367,12 +417,21 @@ class Algo:
 #############################HELPER FUNCTIONS (my_utils)#############################
 
     def binom(self, prob):
-        t=(100.0*random.randint(0,self.max_int)/(self.max_int + 1.0))
+        """Helper function for random seed generation"""
+        t=(100.0*random.randint(0,MAX_INT)/(MAX_INT + 1.0))
         print(t)
-        if (t < prob):
+        if t < prob:
             return 1
-        else:
-            return 0
+        return 0
 
-    def int_rand_in_range(self, range):
-        return (range*random.randint(0,self.max_int)/(self.max_int+1.0))
+    def int_rand_in_range(self, num_range):
+        """Helper function for random seed generation"""
+        return (num_range*random.randint(0,MAX_INT)/(MAX_INT+1.0))
+
+
+if __name__=='__main__':
+    tens_seed=Tensegrity(EDGES)
+    tens_seed.make_tr3()
+    algo=Algo("C:/Users/danie/OneDrive/Desktop/Generating-Tensegrity-Structures/inFileName.txt",
+              False,False,tens_seed)
+    algo.run()
