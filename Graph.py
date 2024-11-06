@@ -254,13 +254,35 @@ class Graph:
                                     print intermediate stages of graph growth
 
         Returns:
-            boolean: _description_
+            boolean: boolean indicating whether or not the graph is growing
         """
-        ####    USE THE TRANSFORMER HERE!!!!!   ####
-        if print_intermed:
-            print("INTERMEDIATE GRAPH PRINTS HERE {size} times")
-            return size
-        return False
+        growing = 1
+
+        print("growing...")
+        oldnodes = self.order()
+        oldedges = self.size()
+        self.transformer.transform()
+        #add_stubs()
+        if (print_intermed):
+            print("print graphviz here")
+            #print_graphviz()
+            #getchar()
+        self.generate_bracket_edges()
+        if (print_intermed):
+            print("print graphviz here")
+            #print_graphviz()
+            #getchar()
+        self.match_nodes()
+        if (print_intermed):
+            print("print graphviz here")
+            #print_graphviz()
+            #getchar()
+        curnodes = self.order()
+        curedges = self.size()
+        if (oldnodes == curnodes and oldedges == curedges):
+            growing = 0
+    
+        return growing
 
     def simplify_graph(self):
         """Removes all nodes that have less than 3 edges 
@@ -300,15 +322,15 @@ class Graph:
             stay_in=True
             for e in edges:
                 if int(e.get_label())==node.get_label():
-                    e.change_label(-1)
+                    e.change_label("-1")
             tries=0
             while stay_in and tries<=5*len(edges):
                 tries+=1
                 rand_ex=random.randint(0,(len(edges)-1))
                 rand_edge=edges[rand_ex]
-                if int(rand_edge.get_label()==-1):
-                    rand_edge.change_label(-1)
-                stay_in=False
+                if int(rand_edge.get_label()=="-1"):
+                    rand_edge.change_label("-1")
+                    stay_in=False
 
     def get_node_edges(self, node):
         """Get the list of all edges containing the given node
@@ -340,5 +362,147 @@ class Graph:
     def mutate_string_labels(self):
         """Change the label of a string in the graph at random
         """
-        randnode = random.randint(0,self.node_number)
+        randnode = random.randint(0,(self.node_number-1))
         self.assign_random_label_for_edges_to_node(self.node_list[randnode])
+
+
+    def find_matching_pairs_recursively(self):
+        nodes=self.node_list
+        all_pairs=[]
+        for i in range (len(nodes)):
+        #for (unsigned int i = 0 i < _nodes.size() i++){
+            my_matches=[]
+            for j in range (len(nodes)):
+            #for (unsigned int j = 0 j < _nodes.size() j++){
+                if (i != j):
+                    if not self.adjacent(nodes[i],nodes[j]):
+                        my_matches.append(j)
+            all_pairs.append(my_matches)
+        found_matches=[]
+
+        if (all_pairs.size() != len(nodes)):
+            print(f"uh oh! different allPairs ({len(all_pairs)}) than nodes ({len(nodes)})!")
+        found_matches = self.recurse_find_pairs(0,all_pairs,found_matches)
+        return found_matches
+    
+    def recurse_find_pairs(self, curindex, allPairs, matches):
+        if (curindex == len(allPairs)):
+            return matches
+        else:
+            myPairs=allPairs[curindex] #every possible good pair
+            temp_matches=[] #copy the current match set
+            for j in range (len(matches)):
+                temp_matches.append(matches[j])
+            myLoc=matches[curindex]
+            #myLoc = find(matches.begin(), matches.end(),(int)curindex)
+            curmatch=-1
+            if (myLoc is not None): # check to i've already been matched
+                curmatch = -1
+                for m in range (len(matches)):
+                    if (matches[m] == myLoc):
+                        curmatch = m
+                temp_matches.append(curmatch)
+                found_matches = self.recurse_find_pairs(curindex+1, allPairs,temp_matches)
+                if ((len(found_matches) == len(allPairs)) and (found_matches[len(found_matches) - 1] != -1)):
+                    return found_matches
+                else:
+                    temp_matches.pop(0)
+            else: #i haven't already been matched
+            #so recurse through all possible matches
+                for i in range (len(myPairs)):
+                    curmatch = myPairs[i]
+                    matchLoc = matches[curmatch]
+                    if (matchLoc is not None):
+                        temp_matches.append(curmatch)
+                        found_matches = self.recurse_find_pairs(curindex+1, allPairs,temp_matches)
+                        if ((found_matches.size() == len(allPairs)) and (found_matches[len(found_matches) - 1] != -1)):
+                            return found_matches
+                        else:
+                            temp_matches.append()
+        temp_matches.append(-1)
+        #if we get here then no matches were found
+        return temp_matches
+
+    def grow_node_by_node_until_size(self, size):
+        #reset()    
+        notgrowing = 0 
+        iters = 0
+        stay=True  
+        while stay:   
+            oldnodes = self.order()
+            oldedges = self.size()
+            self.transformer.transform()
+            self.generate_bracket_edges()
+            curnodes = self.order()
+            curedges = self.size()
+            if (oldnodes==curnodes and oldedges==curedges):
+                notgrowing = 1
+            iters+=1 
+            if (self.number_of_good_nodes()<size) and (notgrowing == 0) and (self.order<80):
+                stay=False
+        self.simplify_graph()
+        if (notgrowing):
+            return -1
+        
+    def number_of_good_nodes(self):
+        count = 0
+        for i in self.node_list:
+            if i.get_degree()> 2:
+                count+=1
+        return count
+  
+        #here we're trying to find pairs of nodes to turn into elements
+    
+    def match_nodes(self):
+        unhappy=[] 
+        unmatched=[]
+        now_unmatched=[]
+        tries = 0
+        unmatched_are_the_same = 1
+        stay=True
+        while stay:
+            print("matching nodes..")
+            tries+=1
+            for i in range (self.order()):
+                if (self.node_list[i].get_other is None):
+                    unmatched.append(i)
+                if (self.node_list[i].happy() == 0):
+                    unhappy.append(i)
+            #search through unhappy nodes
+            for n in unhappy:
+            # only want to match 3-connected nodes
+            # which are "unhappy"
+                if ((n.get_degree() >= 3) and (n.get_other == None)):
+                    found = 0
+                    #first see if you have a perfect match
+                    for j in unhappy:
+                        if ((i != j) and (n.get_bracket() == j.get_bracket()) and not (self.adjacent(n,j)) and (n.get_other==None) and (j.happy() == 0)): #just unhappy, not necc empty
+                            print("a perfect match")
+                            n.set_other(j)
+                            j.set_other(n)
+                            found = True
+                            break
+                        if found:
+                            break
+            #otherwise find an imperfect match
+                    if not found:
+                        for j in unhappy:
+                            if ((i != j) and (n.get_other == None) and (j.get_other == None)):
+                                if not self.adjacent(i,j):
+                                    print("an imperfect match")
+                                    n.set_other(j)
+                                    j.set_other(n)
+            now_unmatched=[]
+            for i in self.node_list():
+                if (i.get_other is None):
+                    now_unmatched.append(i)
+            if (len(unmatched) == len(now_unmatched)):
+                unmatched_are_the_same = 1
+                for i in range (len(unmatched)):
+                    if (unmatched[i] != now_unmatched[i]):
+                        unmatched_are_the_same = 0
+                        break
+            else:
+                unmatched_are_the_same =0
+            if now_unmatched.size() != 0 and (unmatched_are_the_same == 0) and (tries < 5):
+                stay=False

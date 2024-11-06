@@ -9,12 +9,18 @@ from tensegrity import Tensegrity
 MAX_GRAPH_SIZE=4
 MAX_INT=2147483647
 EDGES=["1","2","3","4","5"]
+MAX_GENS= 2
+INIT_POP_SIZE= 4
+X_OVER_RATE = 60
+LS_MUT_RATE =5
+MUT_RATE = 2
+SAMPLE_RATE = 1
+FITNESS_INDEX = 1 #this is the index we care about
 
 
 class Algo:
     """asdf"""
-    def __init__ (self, in_file_name, do_log, render, seed):
-        self.render=render
+    def __init__ (self, in_file_name, do_log, seed):
         self.pop=[]
         self.init_pop_size=None
         self.sample_rate=None
@@ -30,8 +36,6 @@ class Algo:
         #self.debug=None    #UNECESSARY???
         self.init(in_file_name,seed)
         self.out_file_name=None
-
-
 
     def init(self, config, seed):
         """Initializes the population and reads in the config file
@@ -59,8 +63,7 @@ class Algo:
                 tens.make_tr3()
                 tens.find_random_string_labels()
             if self.pop.count(tens)!=0:
-                print("IM CONFUSED!!!!")
-                #delete tens !!!!!! delete it from the pop???
+                self.pop.remove(tens)
             else:
                 self.pop.append(tens)
                 num_added+=1
@@ -76,7 +79,8 @@ class Algo:
         Returns:
             boolean: True if member deleted, False if member not found
         """
-        if self.pop[i] is not None:
+        if i<len(self.pop):
+        #if self.pop[i] is not None:
             print(f"deleting {i}")
 
 
@@ -113,15 +117,15 @@ class Algo:
             else:   #normal xover or mutation.
                 #2 should be missing index or most relevant objective
                 #spin the wheel...
-                p1_val=self.int_rand_in_range(len(roulette_wheel))
+                p1_val=self.int_rand_in_range(len(roulette_wheel)-1)
                 #find the index
-                p1_index=roulette_wheel[p1_val]
+                p1_index=roulette_wheel[int(p1_val)]
                 #select the parent
                 p1=self.pop[p1_index]
                 #and again for p2
                 #random.randrange(len(roulette_wheel))
                 p2_val=self.int_rand_in_range(len(roulette_wheel))
-                p2index=roulette_wheel[p2_val]
+                p2index=roulette_wheel[int(p2_val)]
                 p2=self.pop[p2index]
                 if (self.binom(self.x_over_rate) and (p1_index != p2_index)):
                     p1x1 = 0
@@ -154,9 +158,9 @@ class Algo:
 
     def print_pop(self):
         """Print the population"""
-        maxit=self.pop.size()
-        for i in range (maxit):
-            self.pop[i].print_obj_vals()
+        #maxit=len(self.pop)
+        for i in self.pop:
+            i.print_obj_vals()
 
     def fprint_pop_stats(self, gennum):
         """Write the generation number and each member 
@@ -167,7 +171,12 @@ class Algo:
         """
         with open(self.out_file_name,"a+",encoding="utf-8") as out_file:
             for i in self.pop:
-                out_file.append(f"{gennum}")
+                #to_wrt="["
+                #j=0
+                #while j<(len(gennum)-1):
+                #    to_wrt+=j+", "
+                #to_wrt+=gennum[-1] + "]"
+                out_file.write(str(gennum))
                 i.fprint_obj_vals(out_file)
             out_file.close()
 
@@ -181,13 +190,13 @@ class Algo:
         string_file_name=f"{fname}.str"
         self.pop[0].f_print_string_labels(string_file_name)
         print("hello!")
-        result=self.world.evaluate(self.pop[0],0,0)
+        result=self.world.evaluate(self.pop[0])
         print(result)
         print("olleh!")
 
     def evaluate_member(self, member):
         """Evaluate an individual member of the population"""
-        result = self.world.evaluate(member,self.render,0)
+        result = self.world.evaluate(member)
         member.set_objectives(result)
 
     def evaluate_pop(self):
@@ -210,21 +219,20 @@ class Algo:
         roul.clear()
         #use_funky_roulette=0 #funky roulette is for objectives that you're trying to minimize
         #min_biomass=0.
-        for i in range (self.pop.size()):
+        for i in self.pop:
             #calculate the sum of fitnesses across this index
-            objs=self.pop[i].get_objective_vals()
+            objs=i.get_objective_vals()
             roulettechunk=objs[index]*100
 
         #use this for maximizing
         #make a number of roulette slots proportional to your biomass
-        j=0
-        while j<roulettechunk:
-            roul.append(i)
-            j+=1
+            j=0
+            coin=random.randint(0,1)
+            while j<coin:
+            #while j<roulettechunk:
+                roul.append(self.pop.index(i))
+                j+=1
         return roul
-
-
-
 
     def fscan_config(self, config):
         """Scan the given config file and sets attribute parameters for the population
@@ -239,13 +247,13 @@ class Algo:
         with open(config,"r",encoding="utf-8") as in_file:
 
             # the defaults
-            self.max_gens = 1000
-            self.init_pop_size= 100
-            self.x_over_rate = 60
-            self.ls_mut_rate =5
-            self.mut_rate = 2
-            self.sample_rate = 1
-            self.fitness_index = 3 #this is the index we care about
+            self.max_gens=MAX_GENS
+            self.init_pop_size=INIT_POP_SIZE
+            self.x_over_rate=X_OVER_RATE
+            self.ls_mut_rate=LS_MUT_RATE
+            self.mut_rate=MUT_RATE
+            self.sample_rate=SAMPLE_RATE
+            self.fitness_index=FITNESS_INDEX  #this is the index we care about
 
             print(f"TPop.fscan_config() - filename is {config}")
             if not in_file:
@@ -296,7 +304,7 @@ class Algo:
         num_of_day=0
 
         root_file_name=""
-        out_file_name=""
+        self.out_file_name=""
         best_file_name=""
 
         if self.do_logging:
@@ -305,19 +313,20 @@ class Algo:
                 self.out_file_name=f"{root_file_name}.gen"
                 best_file_name=f"{root_file_name}.best"
 
-                temp_out=open(out_file_name,'r',encoding="utf-8")
-                #if file doesn't exist, good!
-                if not temp_out:
-                    break
-                else:
+                try:
+                    open(self.out_file_name,'r',encoding="utf-8")
+                    #if file doesn't exist, good!
                     num_of_day+=1
+                except FileNotFoundError:
+                    break
 
-            print(f"genfile is: {out_file_name}")
+
+            print(f"genfile is: {self.out_file_name}")
             print(f"bestfile is: {best_file_name}")
 
             sys_cmd=""
 
-            sys_cmd=f"ln -s -f {out_file_name} gen.latest.$HOSTNAME"
+            sys_cmd=f"ln -s -f {self.out_file_name} gen.latest.$HOSTNAME"
             if os.system(sys_cmd)!=0:
                 print("Error linking data file!")
             sys_cmd=f"ln -s -f {best_file_name} best.latest.$HOSTNAME"
@@ -345,16 +354,18 @@ class Algo:
         to_delete=[]
         to_delete.clear()
         i=0
-        while i<len(self.pop):
+        while (i*-1)<len(self.pop):
             vals=self.pop[i].get_objective_vals()
             cur_val=vals[self.fitness_index]
-            for j in range ((i-5),0,-1):
+            j=i-5
+            while j>=0:
                 print(f"maintain: i:{i} j:{j}")
                 other_vals=self.pop[j].get_objective_vals()
                 other_val=other_vals[self.fitness_index]
                 if cur_val==other_val:
                     print(f"{cur_val} == {other_val}, will delete {j}")
                     to_delete.append(j)
+                    j-=1
                 else:
                     break
             i=j
@@ -401,7 +412,7 @@ class Algo:
     def cull_bottom_half(self):
         """Removes the len(self.pop)/2 least fit members of the population
         """
-        from_val=len(self.pop)/2
+        from_val=len(self.pop)//2
         #from_val=self.init_pop_size/2
         print(f"culling - from_val+1 is {from_val+1}, pop.size is: {len(self.pop)}")
         for i in range (from_val+1,len(self.pop)):
@@ -419,7 +430,6 @@ class Algo:
     def binom(self, prob):
         """Helper function for random seed generation"""
         t=(100.0*random.randint(0,MAX_INT)/(MAX_INT + 1.0))
-        print(t)
         if t < prob:
             return 1
         return 0
@@ -429,9 +439,12 @@ class Algo:
         return (num_range*random.randint(0,MAX_INT)/(MAX_INT+1.0))
 
 
+
+#############################Driver#############################
+
 if __name__=='__main__':
     tens_seed=Tensegrity(EDGES)
     tens_seed.make_tr3()
-    algo=Algo("C:/Users/danie/OneDrive/Desktop/Generating-Tensegrity-Structures/inFileName.txt",
-              False,False,tens_seed)
+    file_name="/mnt/c/users/danie/onedrive/desktop/generating-tensegrity-structures/inFileName.txt"
+    algo=Algo(file_name,True,tens_seed)
     algo.run()

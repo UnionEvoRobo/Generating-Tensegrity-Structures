@@ -8,14 +8,12 @@ class Element:
     ELEM_UNIT_RAD=12
 
 
-    def __init__(self, body):
-        self.body=body
+    def __init__(self):
+        self.top_strings=[]
+        self.bot_strings=[]
 
     def attach_string_to_bottom(self, new_string):
-        None
+        self.bot_strings.append(new_string)
 
     def attach_string_to_top(self, new_string):
-        None
-
-    def set_weights(self, el_vals):
-        None
+        self.top_strings.append(new_string)

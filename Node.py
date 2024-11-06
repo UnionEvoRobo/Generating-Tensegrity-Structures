@@ -11,6 +11,7 @@ class Node:
         self.label=str(label)
         self.bracket=""
         self.adjacent=[]
+        self.other=None
 
     def set_label(self, new_label):
         """Set self.label to the given string.
@@ -84,8 +85,34 @@ class Node:
         """Sets the degree of the node back to 0
         """
         self.adjacent.clear()
-        
-        
+    
+    def get_other(self):
+        return self.other
         
     def set_element_num(self,num):
         None
+    
+    def unset_other(self):
+        print("Unsetting other")
+        self.other=None
+    
+    def set_other(self, other):
+        amhappy = self.happy()
+
+  
+        if(self.other):
+            self.other.unset_other()
+  
+        self.other = other
+
+        if (amhappy > self.happy()):
+            print("Node::you made me unhappy!")
+
+
+    def happy(self):
+        if not self.other:
+            return 0
+        elif (self.get_bracket!=self.bracket):
+            return 0
+        else:
+            return 1
