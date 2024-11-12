@@ -1,11 +1,19 @@
-"""asdf"""
+"""Tensegrity module for the generation of complex tensegrity structures.
+
+@author: Daniel Casper
+@version: 1.0
+"""
+
 import random
 from graph import Graph
+from l_system import LSystem
 
-L_SYSTEM={"1":"1>2{1}5", "2":"2>4{1}1", "3":"3>4", "4":"4>3{4}4", "5":"5>3"}
+DEF_L_SYSTEM={}
+#DEF_L_SYSTEM={"1":"1>2{1}5", "2":"2>4{1}1", "3":"3>4", "4":"4>3{4}4", "5":"5>3"}
 
 class Tensegrity:
-    """asdf"""
+    """Tensegrity module for the generation of complex tensegrity structures."""
+
     def __init__(self, edges, seed=None):
         if seed is not None:
             self.graph=seed.get_graph()
@@ -21,7 +29,7 @@ class Tensegrity:
             self.edge_types=seed.get_edge_types()
         else:
             self.graph=None
-            self.l_system=L_SYSTEM
+            self.l_system=LSystem(DEF_L_SYSTEM)
             self.pairs=[]
             self.objectives=[]
             self.num_elements=0
@@ -152,7 +160,7 @@ class Tensegrity:
             self.genome.append(p2gen[i])
 
     def find_random_string_labels(self):
-        """asdf"""
+        """Find the labels of random strings"""
         self.graph.find_random_string_labels()
         self.set_string_labels_from_graph()
 
@@ -170,7 +178,7 @@ class Tensegrity:
             #to_wrt+=self.string_labels[-1] + "]"
             out_file.write(str(self.string_labels))
             out_file.close()
-    
+
     def f_print_genome(self, f_name):
         """Print the list of string labels to a file
 
@@ -195,15 +203,15 @@ class Tensegrity:
         return len(self.genome)
 
     def fprint_obj_vals(self, out_file):
-        """I HAVE NO IDEA
+        """Print the objective values
 
         Args:
-            out_file (_type_): _description_
+            out_file (string): name of destination file
         """
-        out_file.write(str(self.objectives))
+        out_file.write(str(self.objectives)+"\n")
 
     def print_obj_vals(self):
-        """I HAVE NO IDEA
+        """Print objective values
         """
         print(self.objectives)
 
@@ -227,6 +235,37 @@ class Tensegrity:
         self.pairs.append(0)
         self.pairs.append(1)
         self.pairs.append(2)
+
+    def make_tr4(self):
+        """Make a three-bar tensegrity
+        """
+        self.graph = Graph(self.l_system, self.edge_types)
+        self.graph.make_tr4()
+        self.pairs=[]
+        self.pairs.append(4)
+        self.pairs.append(5)
+        self.pairs.append(6)
+        self.pairs.append(7)
+        self.pairs.append(0)
+        self.pairs.append(1)
+        self.pairs.append(2)
+        self.pairs.append(3)
+
+    def make_tr15(self):
+        """Make a fifteen-bar tensegrity
+        """
+        self.l_system.fscan("tr15.tens")
+        self.graph = Graph(self.l_system,self.edge_types)
+        # getchar();
+        #  _ls->print();
+        self.grow(30,0)
+        #hard-code element numbers
+        elnums=[1,2,3,1,4,3,5,2,6,4,7,5,8,6,9,7,10,8,11,9,12,10,13,11,14,12,15,13,15,14]
+        gnomes=self.graph.get_nodes()
+        for g in range (enumerate(gnomes)):
+            #printf("setting %d %d\n",g,elnums[g]);
+            gnomes[g].setElementNum(elnums[g])
+
 
     def new_grow(self, size):
         """Grows the contained graph using the transformer
@@ -260,7 +299,7 @@ class Tensegrity:
         result  = self.graph.grow_node_by_node_until_size(size,self.l_system)
         tries = 1
         success = 0
-        if (result == -1):
+        if result == -1:
             success = 0
         else:
             # if it is too small or an odd number of nodes
@@ -270,20 +309,20 @@ class Tensegrity:
                 while do:
                     self.graph.grow_node_by_node_until_size(size+tries,self.l_system,print_intermed)
                     tries+=1
-                    if (((self.graph.order() < size) or (self.graph.order()%2 != 0)) and (tries < 10)):
+                    if ((self.graph.order() < size) or (self.graph.order()%2 != 0)) and (
+                        tries < 10):
                         do=False
                 if ((self.graph.order() >= size) and (self.graph.order()%2 == 0)):
                     success = 1
             else:# it is good
                 success = 1
-        if (success):
+        if success:
             self.find_pairs()
         return success
-    
+
 
     def mutate(self):
-        """Mutate a tensegrity
-        """
+        """Mutate a tensegrity"""
         if random.randint(0,2):
             if len(self.genome)==0:
                 self.genome.append(random.random()*2.0)
@@ -302,5 +341,6 @@ class Tensegrity:
         self.set_string_labels_from_graph()
 
     def find_pairs(self):
+        """Find pairs of nodes."""
         self.pairs.clear()
         self.pairs=self.graph.find_matching_pairs_recursively()

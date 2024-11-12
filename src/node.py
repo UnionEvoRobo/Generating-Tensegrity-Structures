@@ -1,7 +1,7 @@
 """Node module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
 
 class Node:
@@ -87,32 +87,45 @@ class Node:
         self.adjacent.clear()
     
     def get_other(self):
+        """Get a nodes paired other
+
+        Returns:
+            node: the current nodes linked pair
+        """
         return self.other
-        
-    def set_element_num(self,num):
-        None
-    
+
     def unset_other(self):
+        """Sets a node's linked pair to None"""
         print("Unsetting other")
         self.other=None
-    
+
     def set_other(self, other):
+        """Set a node's linked pair to an indicated other node
+
+        Args:
+            other (node): the node to be set as the linked pair
+        """
         amhappy = self.happy()
 
-  
-        if(self.other):
+
+        if self.other:
             self.other.unset_other()
-  
+
         self.other = other
 
-        if (amhappy > self.happy()):
+        if amhappy > self.happy():
             print("Node::you made me unhappy!")
 
 
     def happy(self):
+        """Find if a node is happy
+
+        Returns:
+            boolean: indicates whether a node is happy
+        """
         if not self.other:
-            return 0
-        elif (self.get_bracket!=self.bracket):
-            return 0
+            return False
+        elif self.get_bracket()!=self.bracket:
+            return False
         else:
-            return 1
+            return True

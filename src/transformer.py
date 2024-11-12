@@ -1,7 +1,7 @@
 """Transformer module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 4.0
+@version: 5.0
 """
 
 class Transformer:

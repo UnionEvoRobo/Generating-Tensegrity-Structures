@@ -1,5 +1,9 @@
-"""asdf"""
+"""Algorithm object for the generation of complex tensegrity structures.
 
+
+@author: Daniel Casper
+@version: 1.0
+"""
 import os
 import time
 import random
@@ -18,22 +22,19 @@ SAMPLE_RATE = 1
 FITNESS_INDEX = 1 #this is the index we care about
 
 
-class Algo:
-    """asdf"""
+class Algorithm:
+    """Algorithm object for the generation of complex tensegrity structures."""
     def __init__ (self, in_file_name, do_log, seed):
         self.pop=[]
         self.init_pop_size=None
         self.sample_rate=None
         self.max_gens=None
-        #self.max_graph_size=MAX_GRAPH_SIZE     #UNECESSARY???
-        #self.indexes_to_ignore=[]     #UNECESSARY???
         self.x_over_rate=None
         self.ls_mut_rate=None
         self.mut_rate=None
         self.fitness_index=None
         self.do_logging=do_log
         self.world=None
-        #self.debug=None    #UNECESSARY???
         self.init(in_file_name,seed)
         self.out_file_name=None
 
@@ -67,7 +68,6 @@ class Algo:
             else:
                 self.pop.append(tens)
                 num_added+=1
-        #self.debug=0   #UNECESSARY???
         self.evaluate_pop()
 
     def delete_ith_member(self, i):
@@ -106,7 +106,8 @@ class Algo:
         #as1_mut_worked=0
         #as2_mut_worked=0
 
-        roulette_wheel = self.make_roulette(self.fitness_index)
+        #roulette_wheel = self.make_roulette(self.fitness_index)
+        roulette_wheel = self.make_roulette()
 
         while len(self.pop) < self.init_pop_size:
             if self.x_over_rate==-1: #this is for purely random search
@@ -205,7 +206,7 @@ class Algo:
         for i in self.pop:
             self.evaluate_member(i)
 
-    def make_roulette(self, index):
+    def make_roulette(self):
         """makes a roulette wheel by creating N entries 
         for every member of the pop,
         where N == surviving_children()
@@ -221,8 +222,8 @@ class Algo:
         #min_biomass=0.
         for i in self.pop:
             #calculate the sum of fitnesses across this index
-            objs=i.get_objective_vals()
-            roulettechunk=objs[index]*100
+                                                        #objs=i.get_objective_vals()
+                                                        #roulettechunk=objs[index]*100
 
         #use this for maximizing
         #make a number of roulette slots proportional to your biomass
@@ -445,6 +446,6 @@ class Algo:
 if __name__=='__main__':
     tens_seed=Tensegrity(EDGES)
     tens_seed.make_tr3()
-    file_name="/mnt/c/users/danie/onedrive/desktop/generating-tensegrity-structures/inFileName.txt"
-    algo=Algo(file_name,True,tens_seed)
+    FILE_NAME="inFileName.txt"
+    algo=Algorithm(FILE_NAME,True,tens_seed)
     algo.run()
