@@ -13,8 +13,8 @@ from tensegrity import Tensegrity
 MAX_GRAPH_SIZE=4
 MAX_INT=2147483647
 EDGES=["1","2","3","4","5"]
-MAX_GENS= 2
-INIT_POP_SIZE= 4
+MAX_GENS= 15
+INIT_POP_SIZE= 30
 X_OVER_RATE = 60
 LS_MUT_RATE =5
 MUT_RATE = 2
@@ -344,7 +344,7 @@ class Algorithm:
                 print(f"************ generation {num_gens} ********************")
                 self.fprint_pop_stats(num_gens)
                 self.fprint_best(best_file_name)
-                self.print_pop()
+                                    #self.print_pop()
             self.add_new_members()  #self.add_new_members(num_gens)
             num_gens+=1
             #num_iters=num_gens
@@ -353,31 +353,34 @@ class Algorithm:
         """Aids in curating members of the current population"""
         print("hello")
         to_delete=[]
-        to_delete.clear()
         i=0
-        while (i*-1)<len(self.pop):
+        size=self.init_pop_size
+        while (-i)<len(self.pop):
             vals=self.pop[i].get_objective_vals()
             cur_val=vals[self.fitness_index]
+            #cur_val=random.randint(1,10)
             j=i-5
-            while j>=0:
-                print(f"maintain: i:{i} j:{j}")
+            while -j>=0 and -j<len(self.pop):
+                print(f"maintain: i:{size+i} j:{size+j}")
                 other_vals=self.pop[j].get_objective_vals()
                 other_val=other_vals[self.fitness_index]
+                #other_val=random.randint(1,10)
                 if cur_val==other_val:
-                    print(f"{cur_val} == {other_val}, will delete {j}")
-                    to_delete.append(j)
+                    print(f"{cur_val} == {other_val}, will delete {size+j}")
+                    to_delete.append((self.pop[j],size+j))
                     j-=1
                 else:
                     break
             i=j
-        print("erasing...")
-        for i in to_delete:
-            to_del=i
-            print(f"deleting {to_del}")
-            self.pop.pop(to_del)
-            print(f"and erasing {None}")
-            #self.delete_ith_member(to_delete[i])
-        print("done erasing")
+        if len(to_delete)!=0:
+            print("erasing...")
+            for i in to_delete:
+                to_del=i[0]
+                print(f"deleting {i[1]}")
+                self.pop.remove(to_del)
+                #print(f"and erasing {None}")
+                #self.delete_ith_member(to_delete[i])
+            print("done erasing")
 
     def is_in_pop(self, ts):
         """Checks if a tensegrity is in the current population
@@ -417,7 +420,8 @@ class Algorithm:
         #from_val=self.init_pop_size/2
         print(f"culling - from_val+1 is {from_val+1}, pop.size is: {len(self.pop)}")
         for i in range (from_val+1,len(self.pop)):
-            self.delete_ith_member(i)
+            print(f"deleting {i}")
+            self.pop.pop(from_val+1)
         print("done culling")
         self.pop=self.pop[0:from_val]
         print("done resizing")

@@ -118,8 +118,8 @@ class Evaluator:
                 #cur_obj=self.objvect[(self.objvect)-1]
                 elem1 = Strut()
                 self.elements.append(elem1)
-                graph_nodes[top].set_element_num(len(self.elements))
-                graph_nodes[bottom].set_element_num(len(self.elements))
+                graph_nodes[top].set_label(len(self.elements))
+                graph_nodes[bottom].set_label(len(self.elements))
             i+=1
 
         #self.d_body_disable(self.elements[0].body)          #REPLACE
@@ -130,9 +130,9 @@ class Evaluator:
             for n in node_element_matches:
                 if n==e.get_start():
                     index_of_from=node_element_matches.index(n)
-                if n==e.get_end():
+                elif n==e.get_end():
                     index_of_to=node_element_matches.index(n)
-                if index_of_from!=-1 and index_of_to!=-1:
+                elif index_of_from!=-1 and index_of_to!=-1:
                     break
             if index_of_from==-1 or index_of_to==-1:
                 print("couldn't find self.elements")
