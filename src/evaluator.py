@@ -3,7 +3,7 @@
 @author: Daniel Casper
 @version: 1.0
 """
-
+import random
 from strut import Strut
 from tens_string import TensString
 
@@ -42,12 +42,13 @@ class Evaluator:
         self.update_string_labels(tens)             #NO ODE
 
         if result!=0:
-            print("BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX")
+            #print("BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX")
             #self.run_tensegrity(stop_on_flag,render)
             #dt=self.distance_traveled(self.curr_com)
             #print(f"distance: {dt}")
             results.append(0.)
-            results.append("Something from the evaluation goes here")
+            #results.append("Something from the evaluation goes here")
+            results.append(random.randint(1,20))
             #results.append(dt)
         else:
             results.append(0.)

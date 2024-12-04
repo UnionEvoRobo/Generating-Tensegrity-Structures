@@ -5,7 +5,7 @@
 """
 
 import random
-from graph import Graph
+from src.graph import Graph
 from l_system import LSystem
 
 DEF_L_SYSTEM={}

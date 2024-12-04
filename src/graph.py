@@ -236,15 +236,15 @@ class Graph:
         while self.node_number < 6:
             self.add_node(None)
 
-        self.add_edge('3', self.node_list[0], self.node_list[1])
-        self.add_edge('3', self.node_list[1], self.node_list[2])
-        self.add_edge('3', self.node_list[2], self.node_list[0])
-        self.add_edge('1', self.node_list[3], self.node_list[4])
-        self.add_edge('3', self.node_list[4], self.node_list[5])
-        self.add_edge('5', self.node_list[5], self.node_list[3])
-        self.add_edge('2', self.node_list[4], self.node_list[0])
-        self.add_edge('4', self.node_list[5], self.node_list[1])
-        self.add_edge('1', self.node_list[3], self.node_list[2])
+        self.add_edge('C', self.node_list[0], self.node_list[1])
+        self.add_edge('C', self.node_list[1], self.node_list[2])
+        self.add_edge('C', self.node_list[2], self.node_list[0])
+        self.add_edge('A', self.node_list[3], self.node_list[4])
+        self.add_edge('C', self.node_list[4], self.node_list[5])
+        self.add_edge('E', self.node_list[5], self.node_list[3])
+        self.add_edge('B', self.node_list[4], self.node_list[0])
+        self.add_edge('D', self.node_list[5], self.node_list[1])
+        self.add_edge('A', self.node_list[3], self.node_list[2])
 
     def make_tr4(self):
         """Create the graph of a starter 3 bar tensegrity"""

@@ -24,6 +24,7 @@ class Transformer:
                     self.act_edge=edge
                     self.rule=self.graph.get_rule(r)
                     self.rule_size()
+
     def rule_size(self):
         """Checks whether the accessed rule creates a bracketed node (long_rule)
         or if it just swaps the letter label of the edge (short_rule)."""
