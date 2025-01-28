@@ -1,16 +1,16 @@
 """Tens_String class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 1.0
+@version: 2.0
 """
 
 class TensString:
     """Tens_String class for the generation of complex tensegrity structures."""
 
 
-    def __init__ (self, elem1, elem2,num):
-        self.elem1=elem1
-        self.elem2=elem2
+    def __init__ (self, node1, node2,num):
+        self.node1=node1
+        self.node2=node2
         #self.to_loc=to_loc
         #self.from_loc=from_loc
         self.node_stub=None
@@ -24,19 +24,42 @@ class TensString:
         """
         self.node_stub=label
 
-    def get_from(self):
-        """Gets one end of the string
+    def get_rod_number(self):
+        """Getter for the identifying number of the rod
 
         Returns:
-            element: 
+            int: identifying number of the rod
         """
-        return self.elem1
+        return self.rod_number
+
+    def get_from(self):
+        """Getter for one end of the string
+
+        Returns:
+            node: node that is set as an endpoint for the string
+        """
+        return self.node1
 
     def get_to(self):
-        """_summary_
+        """Getter for one end of the string
 
         Returns:
-            _type_: _description_
+            node: node that is set as an endpoint for the string
         """
-        return self.elem2
-    
+        return self.node2
+
+    def set_from(self, node):
+        """Sets one end of the string
+
+        Args:
+            node (node): node to be set as an endpoint for the string
+        """
+        self.node1=node
+
+    def set_to(self, node):
+        """Sets the other end of the string
+
+        Args:
+            node (node): node to be set as an endpoint for the string
+        """
+        self.node2=node

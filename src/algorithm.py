@@ -2,7 +2,7 @@
 
 
 @author: Daniel Casper
-@version: 1.0
+@version: 2.0
 """
 import os
 import time
@@ -16,7 +16,7 @@ EDGES=["1","2","3","4","5"]
 MAX_GENS= 3
 INIT_POP_SIZE= 10
 X_OVER_RATE = 60
-LS_MUT_RATE =5
+LS_MUT_RATE=5
 MUT_RATE = 2
 SAMPLE_RATE = 1
 FITNESS_INDEX = 1 #this is the index we care about
@@ -25,7 +25,7 @@ FITNESS_INDEX = 1 #this is the index we care about
 class Algorithm:
     """Algorithm object for the generation of complex tensegrity structures."""
     def __init__ (self, in_file_name, do_log, seed):
-        self.pop=[]
+        self.pop=list[Tensegrity]
         self.init_pop_size=None
         self.sample_rate=None
         self.max_gens=None
@@ -122,7 +122,7 @@ class Algorithm:
                 #find the index
                 p1_index=roulette_wheel[int(p1_val)]
                 #select the parent
-                p1=self.pop[p1_index]
+                p1:Tensegrity=self.pop[p1_index]
                 #and again for p2
                 #random.randrange(len(roulette_wheel))
                 p2_val=self.int_rand_in_range(len(roulette_wheel))
@@ -160,6 +160,7 @@ class Algorithm:
     def print_pop(self):
         """Print the population"""
         #maxit=len(self.pop)
+        i:Tensegrity
         for i in self.pop:
             i.print_obj_vals()
 
@@ -170,7 +171,9 @@ class Algorithm:
         Args:
             gennum (int): Current generation number
         """
+
         with open(self.out_file_name,"a+",encoding="utf-8") as out_file:
+            i:Tensegrity
             for i in self.pop:
                 #to_wrt="["
                 #j=0
@@ -183,19 +186,20 @@ class Algorithm:
 
     def fprint_best(self, fname):
         """UNCLEAR AS OF WRITING"""
+        member:Tensegrity=self.pop[0]
         dot_file_name=""
         dot_file_name=f"{fname}.net"
-        self.pop[0].f_print_genome(dot_file_name)
-        self.pop[0].print_genome()
+        member.f_print_genome(dot_file_name)
+        member.print_genome()
         string_file_name=""
         string_file_name=f"{fname}.str"
-        self.pop[0].f_print_string_labels(string_file_name)
+        member.f_print_string_labels(string_file_name)
         print("hello!")
-        result=self.world.evaluate(self.pop[0])
+        result=self.world.evaluate(member)
         print(result)
         print("olleh!")
 
-    def evaluate_member(self, member):
+    def evaluate_member(self, member:Tensegrity):
         """Evaluate an individual member of the population"""
         result = self.world.evaluate(member)
         member.set_objectives(result)
@@ -351,18 +355,26 @@ class Algorithm:
 
     def maintain_diversity(self):
         """Aids in curating members of the current population"""
+        i:Tensegrity
+        for i in self.pop:
+            if i.get_graph().mut is False:
+                self.pop.remove(i)
+
+
         print("hello")
         to_delete=[]
         i=0
         size=self.init_pop_size
         while (-i)<len(self.pop):
-            vals=self.pop[i].get_objective_vals()
+            imember:Tensegrity=self.pop[i]
+            vals=imember.get_objective_vals()
             cur_val=vals[self.fitness_index]
             #cur_val=random.randint(1,10)
             j=i-5
             while -j>=0 and -j<len(self.pop):
                 print(f"maintain: i:{size+i} j:{size+j}")
-                other_vals=self.pop[j].get_objective_vals()
+                jmember:Tensegrity=self.pop[i]
+                other_vals=jmember.get_objective_vals()
                 other_val=other_vals[self.fitness_index]
                 #other_val=random.randint(1,10)
                 if cur_val==other_val:
@@ -396,12 +408,13 @@ class Algorithm:
     def sort_pop_by_fitness(self):
         """Sort the population according to how well the evaluate in 
         relation to the fitness parameters"""
+        i:Tensegrity
         for i in self.pop:
             cur_tens=i
             cur_objs=cur_tens.get_objective_vals()
             max_val=cur_objs[self.fitness_index]
             max_index=self.pop.index(i)
-
+            j:Tensegrity
             for j in self.pop:
                 j_tens=j
                 job_js=j_tens.get_objective_vals()

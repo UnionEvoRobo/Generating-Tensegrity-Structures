@@ -1,7 +1,7 @@
 """Graph class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 4.0
+@version: 4.1
 """
 
 import random
@@ -21,6 +21,7 @@ class Graph:
         self.node_list = []
         self.bracket_nodes = []
         self.node_number = 0
+        self.mut=False
 
     def get_rule(self, key):
         """Getter for individual rules in the rule dictionary
@@ -32,7 +33,7 @@ class Graph:
         Returns:
             string: string containing the desired rule
         """
-        return self.rules[key]
+        return self.rules.get_rule(key)
 
     def get_edge_types(self):
         """Getter for the list of different edge types
@@ -236,15 +237,15 @@ class Graph:
         while self.node_number < 6:
             self.add_node(None)
 
-        self.add_edge('C', self.node_list[0], self.node_list[1])
-        self.add_edge('C', self.node_list[1], self.node_list[2])
-        self.add_edge('C', self.node_list[2], self.node_list[0])
-        self.add_edge('A', self.node_list[3], self.node_list[4])
-        self.add_edge('C', self.node_list[4], self.node_list[5])
-        self.add_edge('E', self.node_list[5], self.node_list[3])
-        self.add_edge('B', self.node_list[4], self.node_list[0])
-        self.add_edge('D', self.node_list[5], self.node_list[1])
-        self.add_edge('A', self.node_list[3], self.node_list[2])
+        self.add_edge('3', self.node_list[0], self.node_list[1])
+        self.add_edge('3', self.node_list[1], self.node_list[2])
+        self.add_edge('3', self.node_list[2], self.node_list[0])
+        self.add_edge('1', self.node_list[3], self.node_list[4])
+        self.add_edge('3', self.node_list[4], self.node_list[5])
+        self.add_edge('5', self.node_list[5], self.node_list[3])
+        self.add_edge('2', self.node_list[4], self.node_list[0])
+        self.add_edge('4', self.node_list[5], self.node_list[1])
+        self.add_edge('1', self.node_list[3], self.node_list[2])
 
     def make_tr4(self):
         """Create the graph of a starter 3 bar tensegrity"""
@@ -346,15 +347,22 @@ class Graph:
         if edges is not None:
             stay_in = True
             for e in edges:
-                if int(e.get_label()) == node.get_label():
-                    e.change_label("-1")
+                if e.get_label() == node.get_label():
+                    # rand_edge.change_label("-1")
+                    i=random.randint(-1, (len(self.edge_types) - 1))
+                    e.change_label(self.edge_types[i])
+                    self.mut=True
+
             tries = 0
             while stay_in and tries <= 5 * len(edges):
                 tries += 1
                 rand_ex = random.randint(0, (len(edges) - 1))
                 rand_edge = edges[rand_ex]
                 if int(rand_edge.get_label() == "-1"):
-                    rand_edge.change_label("-1")
+                    # rand_edge.change_label("-1")
+                    i=random.randint(0, (len(self.edge_types) - 1))
+                    rand_edge.change_label(self.edge_types[i])
+                    self.mut=True
                     stay_in = False
 
     def get_node_edges(self, node):

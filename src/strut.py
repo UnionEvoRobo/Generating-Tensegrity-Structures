@@ -1,7 +1,7 @@
 """Strut module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 1.0
+@version: 2.0
 """
 
 class Strut:
@@ -11,7 +11,9 @@ class Strut:
     ELEM_UNIT_RAD=12
 
 
-    def __init__(self):
+    def __init__(self,top_node=None,bottom_node=None):
+        self.top=top_node
+        self.bottom=bottom_node
         self.top_strings=[]
         self.bot_strings=[]
 
@@ -30,3 +32,19 @@ class Strut:
             new_string (tens_string): the string to attach to the top of the element
         """
         self.top_strings.append(new_string)
+
+    def get_top(self):
+        """Getter for node at the top of the strut
+
+        Returns:
+            node: node object at the top of the strut
+        """
+        return self.top
+
+    def get_bottom(self):
+        """Getter for node at the bottom of the strut
+
+        Returns:
+            node: node object at the bottom of the strut
+        """
+        return self.bottom

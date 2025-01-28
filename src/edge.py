@@ -121,6 +121,7 @@ class Edge:
         cur_end=self.get_end()
         self.set_end(new_end)
         return cur_end
+
     def change_label(self, new_label):
         """Change the label of the edge to a new value.
 

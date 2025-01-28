@@ -1,15 +1,15 @@
 """Tensegrity module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 1.0
+@version: 1.1
 """
 
 import random
-from src.graph import Graph
+from graph import Graph
 from l_system import LSystem
 
-DEF_L_SYSTEM={}
-#DEF_L_SYSTEM={"1":"1>2{1}5", "2":"2>4{1}1", "3":"3>4", "4":"4>3{4}4", "5":"5>3"}
+#DEF_L_SYSTEM={}
+DEF_L_SYSTEM={"1":"1>2{1}5", "2":"2>4{1}1", "3":"3>4", "4":"4>3{4}4", "5":"5>3"}
 
 class Tensegrity:
     """Tensegrity module for the generation of complex tensegrity structures."""
@@ -254,15 +254,16 @@ class Tensegrity:
     def make_tr15(self):
         """Make a fifteen-bar tensegrity
         """
-        self.l_system.fscan("tr15.tens")
+        #self.l_system.fscan("tr15.tens")
         self.graph = Graph(self.l_system,self.edge_types)
+        self.graph.make_tr3()
         # getchar();
         #  _ls->print();
         self.grow(30,0)
         #hard-code element numbers
         elnums=[1,2,3,1,4,3,5,2,6,4,7,5,8,6,9,7,10,8,11,9,12,10,13,11,14,12,15,13,15,14]
         gnomes=self.graph.get_nodes()
-        for g in range (enumerate(gnomes)):
+        for g in (enumerate(gnomes)):
             #printf("setting %d %d\n",g,elnums[g]);
             gnomes[g].setElementNum(elnums[g])
 
@@ -296,7 +297,8 @@ class Tensegrity:
         Returns:
             Graph: the resultant graph after transformation
         """
-        result  = self.graph.grow_node_by_node_until_size(size,self.l_system)
+        result  = self.graph.grow_node_by_node_until_size(size)
+        # result  = self.graph.grow_node_by_node_until_size(size,self.l_system)
         tries = 1
         success = 0
         if result == -1:
@@ -307,7 +309,8 @@ class Tensegrity:
             if ((self.graph.order() < size) or (self.graph.order()%2 != 0)):
                 do=True
                 while do:
-                    self.graph.grow_node_by_node_until_size(size+tries,self.l_system,print_intermed)
+                    self.graph.grow_node_by_node_until_size(size+tries)
+                    # self.graph.grow_node_by_node_until_size(size+tries,self.l_system,print_intermed)
                     tries+=1
                     if ((self.graph.order() < size) or (self.graph.order()%2 != 0)) and (
                         tries < 10):

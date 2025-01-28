@@ -38,4 +38,6 @@ class LSystem:
         #  printf("read %d items\n",result);
         #  getchar();
         out_file.close()
-        
+
+    def get_rule(self, key):
+        return self.rule_dict[key]

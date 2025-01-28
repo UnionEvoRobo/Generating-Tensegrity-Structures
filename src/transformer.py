@@ -1,8 +1,12 @@
 """Transformer module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 5.0
+@version: 5.1
 """
+
+from edge import Edge
+from graph import Graph
+
 
 class Transformer:
     """Transformer class for the generation of complex tensegrity structures."""
@@ -10,7 +14,7 @@ class Transformer:
     def __init__(self, graph):
         self.act_edge=None
         self.rule=None
-        self.graph=graph
+        self.graph:Graph=graph
         self.node_index=0
 
     def transform(self):
@@ -18,6 +22,7 @@ class Transformer:
         self.graph.clear_nodes()
         old_edges=self.graph.edge_list
         self.graph.edge_list=[]
+        edge:Edge
         for edge in old_edges:
             for r in self.graph.get_edge_types():
                 if edge.get_label()==r:

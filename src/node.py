@@ -85,7 +85,7 @@ class Node:
         """Sets the degree of the node back to 0
         """
         self.adjacent.clear()
-    
+
     def get_other(self):
         """Get a nodes paired other
 
