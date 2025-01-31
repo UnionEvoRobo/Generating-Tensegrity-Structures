@@ -1,19 +1,22 @@
 """Graph class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 4.1
+@version: 5.0
 """
 
 import random
+from l_system import LSystem
 from transformer import Transformer
 from node import Node
 from edge import Edge
+import graphviz  # doctest: +NO_EXE
 
 
 class Graph:
     """Graph class for the generation of complex tensegrity structures."""
 
     def __init__(self, rules, edge_types):
+        self.dot = graphviz.Digraph(comment='Tensegrity Object Graph')
         self.edge_types = edge_types
         self.rules = rules
         self.transformer = Transformer(self)
@@ -23,7 +26,7 @@ class Graph:
         self.node_number = 0
         self.mut=False
 
-    def get_rule(self, key):
+    def get_rule(self, key:LSystem):
         """Getter for individual rules in the rule dictionary
 
         Args:
@@ -140,12 +143,14 @@ class Graph:
         """
         edge = Edge(label, start, end)
         self.edge_list.append(edge)
-        start.add_edge(end)
-        end.add_edge(start)
+        if start is not None:
+            start.add_edge(end)
+        if end is not None:
+            end.add_edge(start)
 
     def generate_bracket_edges(self):
         """Creates new connecting edges between 
-           nodes with matching bracket types
+            nodes with matching bracket types
         """
         for node1 in self.bracket_nodes:
             for node2 in self.bracket_nodes:
@@ -153,7 +158,7 @@ class Graph:
                         node1) < self.bracket_nodes.index(
                             node2) and node1.get_bracket(
                             ) == node2.get_bracket():
-                    edge = Edge(node1.get_bracket().capitalize(), node1, node2)
+                    edge = Edge(node1.get_bracket(), node1, node2)
                     if edge.is_unique(self.edge_list):
                         self.edge_list.append(edge)
                         node1.add_edge(node2)
@@ -237,15 +242,15 @@ class Graph:
         while self.node_number < 6:
             self.add_node(None)
 
-        self.add_edge('3', self.node_list[0], self.node_list[1])
-        self.add_edge('3', self.node_list[1], self.node_list[2])
-        self.add_edge('3', self.node_list[2], self.node_list[0])
-        self.add_edge('1', self.node_list[3], self.node_list[4])
-        self.add_edge('3', self.node_list[4], self.node_list[5])
-        self.add_edge('5', self.node_list[5], self.node_list[3])
-        self.add_edge('2', self.node_list[4], self.node_list[0])
-        self.add_edge('4', self.node_list[5], self.node_list[1])
-        self.add_edge('1', self.node_list[3], self.node_list[2])
+        self.add_edge(3, self.node_list[0], self.node_list[1])
+        self.add_edge(3, self.node_list[1], self.node_list[2])
+        self.add_edge(3, self.node_list[2], self.node_list[0])
+        self.add_edge(1, self.node_list[3], self.node_list[4])
+        self.add_edge(3, self.node_list[4], self.node_list[5])
+        self.add_edge(5, self.node_list[5], self.node_list[3])
+        self.add_edge(2, self.node_list[4], self.node_list[0])
+        self.add_edge(4, self.node_list[5], self.node_list[1])
+        self.add_edge(1, self.node_list[3], self.node_list[2])
 
     def make_tr4(self):
         """Create the graph of a starter 3 bar tensegrity"""
@@ -535,9 +540,9 @@ class Graph:
             tries += 1
             for i in range(self.order()):
                 if self.node_list[i].get_other is None:
-                    unmatched.append(i)
+                    unmatched.append(self.node_list[i])
                 if self.node_list[i].happy() == 0:
-                    unhappy.append(i)
+                    unhappy.append(self.node_list[i])
             #search through unhappy nodes
             for n in unhappy:
                 # only want to match 3-connected nodes
@@ -572,12 +577,29 @@ class Graph:
                     now_unmatched.append(i)
             if len(unmatched) == len(now_unmatched):
                 unmatched_are_the_same = 1
-                for i in range (enumerate(unmatched)):
+                for i in (enumerate(unmatched)):
                     if unmatched[i] != now_unmatched[i]:
                         unmatched_are_the_same = 0
                         break
             else:
                 unmatched_are_the_same = 0
             if len(now_unmatched) != 0 and (unmatched_are_the_same
-                                              == 0) and (tries < 5):
+                                            == 0) and (tries < 5):
                 stay = False
+
+    def draw_graph(self,graph_name_num):
+        """Reads through the node_list and edge_list and generates nodes
+        and edges respectively using the information contained within
+        the node and edge objects.
+        """
+        i:Node
+        for i in self.node_list:
+            if i!=[]:
+                self.dot.node(i.get_label())
+        i:Edge
+        for i in self.edge_list:
+            self.dot.edge(str(i.get_start_label()),str(i.get_end_label()),str(i.get_label()))
+        try:
+            self.dot.render(f'doctest-output/graph_num_{graph_name_num}.gv').replace('\\', '/')
+        except graphviz.backend.execute.ExecutableNotFound:
+            print("Graph Made")

@@ -1,11 +1,10 @@
 """Transformer module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 5.1
+@version: 6.0
 """
 
 from edge import Edge
-from graph import Graph
 
 
 class Transformer:
@@ -14,7 +13,7 @@ class Transformer:
     def __init__(self, graph):
         self.act_edge=None
         self.rule=None
-        self.graph:Graph=graph
+        self.graph=graph
         self.node_index=0
 
     def transform(self):
@@ -27,23 +26,50 @@ class Transformer:
             for r in self.graph.get_edge_types():
                 if edge.get_label()==r:
                     self.act_edge=edge
-                    self.rule=self.graph.get_rule(r)
-                    self.rule_size()
+                    rule=self.graph.get_rule(r)
+                    self.rule_type(rule)
 
-    def rule_size(self):
+    def rule_type(self, rule):
         """Checks whether the accessed rule creates a bracketed node (long_rule)
         or if it just swaps the letter label of the edge (short_rule)."""
-        if len(self.rule)==7:
-            self.long_rule()
-        elif len(self.rule)==3:
-            self.short_rule()
+        if rule.count(-1)==2 and rule[1]==-1:
+            self.relabel(rule)
+        elif rule.count(-1)==1 and rule[2]==-1:
+            self.post_branch(rule)
+        elif rule.count(-1)==1 and rule[0]==-1:
+            self.pre_branch(rule)
+        elif rule.count(-1)==0:
+            self.split(rule)
+        else:
+            print("Bad")
 
-    def long_rule(self):
-        """Transforms A, B, and D type edges."""
-        new_node=self.graph.add_node(self.rule[4])
-        self.graph.add_edge(self.rule[2],self.act_edge.get_start(),new_node)
-        self.graph.add_edge(self.rule[-1],self.graph.node_list[-1],self.act_edge.get_end())
+    def split(self, rule):
+        """Executes a split rule."""
+        new_node=self.graph.add_node(rule[1])
+        self.graph.add_edge(rule[0],self.act_edge.get_start(),new_node)
+        self.graph.add_edge(rule[-1],self.graph.node_list[-1],self.act_edge.get_end())
 
-    def short_rule(self):
-        """Transforms C and E type edges."""
-        self.graph.add_edge(self.rule[-1], self.act_edge.get_start(), self.act_edge.get_end())
+    def relabel(self, rule):
+        """Executes a relabel rule."""
+        if rule[0]==-1:
+            self.graph.add_edge(rule[-1], self.act_edge.get_start(), self.act_edge.get_end())
+        else:
+            self.graph.add_edge(rule[0], self.act_edge.get_start(), self.act_edge.get_end())
+
+    def pre_branch(self, rule):
+        """_summary_
+
+        Args:
+            rule (_type_): _description_
+        """
+        self.graph.add_edge(rule[1],None,self.act_edge.get_start())
+        self.relabel([rule[-1],-1,-1])
+
+    def post_branch(self, rule):
+        """_summary_
+
+        Args:
+            rule (_type_): _description_
+        """
+        self.graph.add_edge(rule[1],self.act_edge.get_end(),None)
+        self.relabel([rule[0],-1,-1])

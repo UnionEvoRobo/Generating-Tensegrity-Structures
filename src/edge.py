@@ -2,7 +2,7 @@
 
 
 @author: Daniel Casper
-@version: 2.0
+@version: 2.1
 """
 class Edge:
     """Edge class for the generation of complex tensegrity structures."""    
@@ -59,7 +59,9 @@ class Edge:
             self.start.label(string): The label string for the node
             pointed to by self.start
         """
-        return str(self.start.get_label())
+        if self.start is not None:
+            return str(self.start.get_label())
+        return "NONE"
 
     def get_end_label(self):
         """Return the end node's label.
@@ -68,7 +70,10 @@ class Edge:
             self.end.label(string): The label string for the node
             pointed to by self.end
         """
-        return str(self.end.get_label())
+        if self.end is not None:
+            return str(self.end.get_label())
+        return "NONE"
+
     def equals(self, edge2):
         """Compares to edge objects based on their start and end nodes. 
         

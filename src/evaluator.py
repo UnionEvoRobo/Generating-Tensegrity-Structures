@@ -1,7 +1,7 @@
 """Evaluator module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 2.1   #####DISABLED LINES IN MAKE FROM GRAPH!!! ADDRESS!!!!
 """
 import os
 import random
@@ -82,12 +82,12 @@ class Evaluator:
         #presuming blackbox expects g to be an array of ints, num_struts is an int, and tk is tbd
         returnvals=self.eng.blackBox(matlab.int32(string_ends),
                                         matlab.int32(num_struts),nargout=nargout_num)
-        print(returnvals)
+        #print(returnvals)
         x=returnvals[0][0]
         string_list=[]
         for i in x:
             string_list.append(i)
-        print("BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX")
+        #print("BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX BLACK BOX")
 
     def reset(self):
         """Resets a tensegrity"""
@@ -120,7 +120,7 @@ class Evaluator:
         Returns:
             int: indicates whether or not the tensegrity was modeled
         """
-        self.struts=list[Strut]
+        self.struts:list[Strut]=[]
         self.strings=[]
         already_made=[]
         self.num_string=1
@@ -128,8 +128,8 @@ class Evaluator:
         graph_edges:list[Edge]=graph.get_edges()
         node_element_matches=[]
 
-        if len(rods)!=len(graph_nodes):
-            return 0
+                                                #if len(rods)!=len(graph_nodes):
+                                                #    return 0
         i=0
         while i<len(rods):
             #for i in rods:
@@ -171,9 +171,9 @@ class Evaluator:
                     index_of_to=node_element_matches.index(n)
                 elif index_of_from!=-1 and index_of_to!=-1:
                     break
-            if index_of_from==-1 or index_of_to==-1:
-                print("couldn't find self.elements")
-                return 0
+                                                        #if index_of_from==-1 and index_of_to==-1:
+                                                        #    print("couldn't find self.elements")
+                                                        #    return 0
             from_loc=index_of_from%2
             to_loc=index_of_to%2
             from_el_index=index_of_from//2

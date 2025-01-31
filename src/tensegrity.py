@@ -1,15 +1,16 @@
 """Tensegrity module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 1.1
+@version: 2.0
 """
 
 import random
 from graph import Graph
 from l_system import LSystem
 
-#DEF_L_SYSTEM={}
-DEF_L_SYSTEM={"1":"1>2{1}5", "2":"2>4{1}1", "3":"3>4", "4":"4>3{4}4", "5":"5>3"}
+MAX_INT=2147483647
+# DEF_L_SYSTEM={"1":"2{1}5", "2":"4{1}1", "3":"4", "4":"3{4}4", "5":"3"}
+DEF_L_SYSTEM={1:[2,1,5],2:[4,1,1],3:[4,-1,-1],4:[3,4,4],5:[3,-1,-1]}
 
 class Tensegrity:
     """Tensegrity module for the generation of complex tensegrity structures."""
@@ -17,7 +18,11 @@ class Tensegrity:
     def __init__(self, edges, seed=None):
         if seed is not None:
             self.graph=seed.get_graph()
-            self.l_system=seed.get_l_system()
+            seed_rules=seed.get_l_system()
+            rules={}
+            for i in edges:
+                rules[i]=seed_rules.get_rule(i)
+            self.l_system=LSystem(rules)
             self.pairs=seed.get_pairs()
             self.objectives=seed.get_objective_vals()
             self.num_elements=seed.get_num_elements()
@@ -151,13 +156,25 @@ class Tensegrity:
             parent2 (Tensegrity): the second parent tensegrity used in the mutation
             another_var (int): _description_
         """
-        self.genome=[]
-        p1gen=parent1.get_genome()
-        p2gen=parent2.get_genome()
-        for i in range (int(another_var)):
-            self.genome.append(p1gen[i])
-        for i in range(int(another_var),len(p2gen)):
-            self.genome.append(p2gen[i])
+        parent1:Tensegrity=parent1
+        parent2:Tensegrity=parent2
+        l1=parent1.get_l_system()
+        l2=parent2.get_l_system()
+        l_system=self.get_l_system()
+
+        for i in range (1,int(another_var)+1):
+            l_system.set_rule(i,l1.get_rule(i))
+        for i in range(int(another_var)+1,l2.size()+1):
+            l_system.set_rule(i,l2.get_rule(i))
+
+
+        # self.genome=[]
+        # p1gen=parent1.get_genome()
+        # p2gen=parent2.get_genome()
+        # for i in range (int(another_var)):
+        #     self.genome.append(p1gen[i])
+        # for i in range(int(another_var),len(p2gen)):
+        #     self.genome.append(p2gen[i])
 
     def find_random_string_labels(self):
         """Find the labels of random strings"""
@@ -277,7 +294,10 @@ class Tensegrity:
         Returns:
             Graph: the resultant graph after transformation
         """
-        result = self.graph.grow_while_connecting_rods(size, self.l_system, 0)
+        # result = self.graph.grow_while_connecting_rods(size, self.l_system, 0)
+        # result = self.graph.grow_while_connecting_rods(0)
+        result = self.graph.transform(size)
+        result = self.graph.generate_bracket_edges()
         return result
 
     def simplify(self):
@@ -347,3 +367,23 @@ class Tensegrity:
         """Find pairs of nodes."""
         self.pairs.clear()
         self.pairs=self.graph.find_matching_pairs_recursively()
+
+    def prim_mut(self, rate):
+        """_summary_
+
+        Args:
+            rate (_type_): _description_
+        """
+        for i in self.edge_types:
+            if self.binom(rate):
+                self.l_system.new_rule(i)
+
+    def binom(self, prob):
+        """Helper function for random seed generation"""
+        t=(100.0*random.randint(0,MAX_INT)/(MAX_INT + 1.0))
+        if t < prob:
+            return 1
+        return 0
+
+    def draw_graph(self, graph_num):
+        self.graph.draw_graph(graph_num)

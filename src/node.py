@@ -1,7 +1,7 @@
 """Node module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 3.0
+@version: 3.1
 """
 
 class Node:
@@ -58,7 +58,9 @@ class Node:
     def add_edge(self, node):
         """Increments the degree of the node property by 1
         """
-        self.adjacent.append(node)
+        if node is not None:
+            self.adjacent.append(node)
+
     def remove_edge(self, node):
         """Decrements the degree of the node property by 1
         """

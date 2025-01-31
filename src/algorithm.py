@@ -2,7 +2,7 @@
 
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
 import os
 import time
@@ -12,22 +12,26 @@ from tensegrity import Tensegrity
 
 MAX_GRAPH_SIZE=4
 MAX_INT=2147483647
-EDGES=["1","2","3","4","5"]
-MAX_GENS= 3
+# EDGES=["1","2","3","4","5"]
+EDGES=[1,2,3,4,5]
+MAX_GENS= 5
 INIT_POP_SIZE= 10
 X_OVER_RATE = 60
-LS_MUT_RATE=5
+LS_MUT_RATE=60
 MUT_RATE = 2
 SAMPLE_RATE = 1
+NUM_TRANS=2
 FITNESS_INDEX = 1 #this is the index we care about
 
 
 class Algorithm:
     """Algorithm object for the generation of complex tensegrity structures."""
     def __init__ (self, in_file_name, do_log, seed):
+        self.graph_num=1
         self.pop=list[Tensegrity]
         self.init_pop_size=None
         self.sample_rate=None
+        self.num_trans=None
         self.max_gens=None
         self.x_over_rate=None
         self.ls_mut_rate=None
@@ -68,6 +72,10 @@ class Algorithm:
             else:
                 self.pop.append(tens)
                 num_added+=1
+                tens.new_grow(self.num_trans)
+                tens.simplify()
+                tens.draw_graph(self.graph_num)
+                self.graph_num+=1
         self.evaluate_pop()
 
     def delete_ith_member(self, i):
@@ -107,14 +115,15 @@ class Algorithm:
         #as2_mut_worked=0
 
         #roulette_wheel = self.make_roulette(self.fitness_index)
-        roulette_wheel = self.make_roulette()
+        roulette_wheel = self.make_roulette(FITNESS_INDEX)
 
         while len(self.pop) < self.init_pop_size:
             if self.x_over_rate==-1: #this is for purely random search
-                as1=Tensegrity(EDGES,None) #hard coded for now
+                as1=Tensegrity(EDGES,None)                           #hard coded for now
                 as2=Tensegrity(EDGES,None)
                 as1.make_tr3()
                 as2.make_tr3()
+                print("none")
             else:   #normal xover or mutation.
                 #2 should be missing index or most relevant objective
                 #spin the wheel...
@@ -127,35 +136,62 @@ class Algorithm:
                 #random.randrange(len(roulette_wheel))
                 p2_val=self.int_rand_in_range(len(roulette_wheel))
                 p2index=roulette_wheel[int(p2_val)]
-                p2=self.pop[p2index]
+                p2:Tensegrity=self.pop[p2index]
+                as1 =Tensegrity(EDGES,p1)
+                as2 =Tensegrity(EDGES,p2)
+                as1.make_tr3()
+                as2.make_tr3()
                 if (self.binom(self.x_over_rate) and (p1_index != p2_index)):
-                    p1x1 = 0
-
-                    p1x1=self.int_rand_in_range(p1.length_of_genotype())
-
-                    as1 =Tensegrity(EDGES,p1)
-                    as1.make_tr3()
+                    # p1x1=random.randrange(1,p1.length_of_genotype())
+                    p1x1=random.randrange(1,p1.l_system.size())
                     as1.crossover(p1,p2,p1x1)
-
-                    as2 =Tensegrity(EDGES,p2)
-                    as2.make_tr3()
                     as2.crossover(p2,p1,p1x1)
+
+                    # print("")
+                    # print("")
+                    # print("")
+                    # print("AS1")
+                    # print("Old:  ")
+                    # print(as1.get_l_system())
+                    as1.prim_mut(self.ls_mut_rate)
+                    # print("New:  ")
+                    # print(as1.get_l_system())
+                    # print("")
+                    # print("")
+                    # print("")
+                    # print("AS2")
+                    # print("Old:  ")
+                    # print(as2.get_l_system())
+                    as2.prim_mut(self.ls_mut_rate)
+                    # print("New:  ")
+                    # print(as2.get_l_system())
+                    # print("")
+                    # print("")
+                    # print("")
+
+
+                    #iterate through each rule and if prob hits, mutate
+
                 else: #we mutate
-                    as1 =Tensegrity(EDGES,p1)
-                    as1.make_tr3()
                     as1.mutate()    #as1_mut_worked=as1.mutate()
-                    as2 =Tensegrity(EDGES,p2)
-                    as2.make_tr3()
                     as2.mutate()    #as2_mut_worked=as2.mutate()
             #if as1 doesn't belong get rid of it.
             if not self.is_in_pop(as1):
                 self.evaluate_member(as1) #don't grow!
                 self.pop.append(as1)
                 num_added+=1
+                as1.new_grow(self.num_trans)
+                as1.simplify()
+                as1.draw_graph(self.graph_num)
+                self.graph_num+=1
             if not self.is_in_pop(as2):
                 self.evaluate_member(as2) # don't grow!
                 self.pop.append(as2)
                 num_added+=1
+                as2.new_grow(self.num_trans)
+                as2.simplify()
+                as2.draw_graph(self.graph_num)
+                self.graph_num+=1
 
     def print_pop(self):
         """Print the population"""
@@ -210,33 +246,35 @@ class Algorithm:
         for i in self.pop:
             self.evaluate_member(i)
 
-    def make_roulette(self):
+    def make_roulette(self,index):
+
+
+
         """makes a roulette wheel by creating N entries 
         for every member of the pop,
         where N == surviving_children()
-        the values of the roulette are indeces to the pop
+        the values of the roulette are indeces of the population
         i.e. if individual 5 has 3 surviving children,
         and     individual 6 has 2 
         and     indivitual 7 has 4 then the roulette will look like
         ....555667777...
         same, but for a given index, not just num children"""
         roul=[]
-        roul.clear()
         #use_funky_roulette=0 #funky roulette is for objectives that you're trying to minimize
         #min_biomass=0.
+        i:Tensegrity
+        num=0
         for i in self.pop:
             #calculate the sum of fitnesses across this index
-                                                        #objs=i.get_objective_vals()
-                                                        #roulettechunk=objs[index]*100
-
+            objs=i.get_objective_vals()
+            roulettechunk=objs[index]*100
+            j=0
+            while j<roulettechunk:
+                roul.append(num)
+                j+=1
+            num+=1
         #use this for maximizing
         #make a number of roulette slots proportional to your biomass
-            j=0
-            coin=random.randint(0,1)
-            while j<coin:
-            #while j<roulettechunk:
-                roul.append(self.pop.index(i))
-                j+=1
         return roul
 
     def fscan_config(self, config):
@@ -258,6 +296,8 @@ class Algorithm:
             self.ls_mut_rate=LS_MUT_RATE
             self.mut_rate=MUT_RATE
             self.sample_rate=SAMPLE_RATE
+            self.num_trans=NUM_TRANS
+
             self.fitness_index=FITNESS_INDEX  #this is the index we care about
 
             print(f"TPop.fscan_config() - filename is {config}")
@@ -286,6 +326,8 @@ class Algorithm:
                             self.sample_rate=val
                         case "fitness_index":
                             self.fitness_index=val
+                        case "num_trans":
+                            self.num_trans=val
                         case _:
                             print(f"unrecognized input value to parse_config: {in_string}!")
             in_file.close()
@@ -355,10 +397,6 @@ class Algorithm:
 
     def maintain_diversity(self):
         """Aids in curating members of the current population"""
-        i:Tensegrity
-        for i in self.pop:
-            if i.get_graph().mut is False:
-                self.pop.remove(i)
 
 
         print("hello")
@@ -463,6 +501,9 @@ class Algorithm:
 if __name__=='__main__':
     tens_seed=Tensegrity(EDGES)
     tens_seed.make_tr3()
+    tens_seed.new_grow(NUM_TRANS)
+    tens_seed.simplify()
+    tens_seed.draw_graph(0)
     FILE_NAME="inFileName.txt"
     algo=Algorithm(FILE_NAME,True,tens_seed)
     algo.run()
