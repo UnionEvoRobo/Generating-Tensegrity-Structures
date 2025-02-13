@@ -54,7 +54,7 @@ class Evaluator:
             for i in self.strings:
                 endpoints.append(int(i.get_from().get_label()))
                 endpoints.append(int(i.get_to().get_label()))
-            self.black_box(len(self.struts),endpoints)
+            #self.black_box(len(self.struts),endpoints)
             #self.run_tensegrity(stop_on_flag,render)
             #dt=self.distance_traveled(self.curr_com)
             #print(f"distance: {dt}")
@@ -108,7 +108,7 @@ class Evaluator:
         Returns:
             int: indicates whether or not the tensegrity was modeled
         """
-        return self.make_from_graph(ints.get_graph(),ints.pairs)
+        return self.make_from_graph(ints.get_graph(),ints.struts)
 
     def make_from_graph(self, graph:Graph, rods:list[Node]):
         """Creates a model from a tensegrities graph
@@ -127,39 +127,24 @@ class Evaluator:
         graph_nodes=graph.get_nodes()
         graph_edges:list[Edge]=graph.get_edges()
         node_element_matches=[]
-
-                                                #if len(rods)!=len(graph_nodes):
-                                                #    return 0
+                                                                        # if len(rods)!=len(graph_nodes)*2:
+                                                                        #     return 0
         i=0
         while i<len(rods):
             #for i in rods:
 
             #ind=rods.index(i)
-            temp=rods[i]
-            if len(already_made)<temp:
-                bottom=i
-                top=rods[i]
-                node_element_matches.append(graph_nodes[bottom])
-                node_element_matches.append(graph_nodes[top])
-                already_made.append(bottom)
-                already_made.append(top)
-
-                #if ind==0:
-                #    self.put_capsule(0.5,0.5,((Element.ELEM_UNIT_LEN/2)+(Element.ELEM_UNIT_RAD*2)))
-                #elif not is_static:
-                #    self.put_capsule(0,0,0)
-                #else:
-                #    print("making in static positions")
-                #    self.put_capsule((0.5*ind+0.5),(0.5*ind+0.5),(0.5*ind+0.5))         #REPLACE
-                #cur_obj=self.objvect[(self.objvect)-1]
-
-                elem1 = Strut(graph_nodes[top],graph_nodes[bottom])
-                self.struts.append(elem1)
-                #graph_nodes[top].set_label(len(self.elements))
-                #graph_nodes[bottom].set_label(len(self.elements))
+            temp:Strut=rods[i]
+            # if len(already_made)<temp:
+            bottom:Node=temp.get_bottom()
+            top:Node=temp.get_top()
+            node_element_matches.append(bottom)
+            node_element_matches.append(top)
+            already_made.append(bottom.get_label())
+            already_made.append(top.get_label())
+            # elem1 = Strut(graph_nodes[top],graph_nodes[bottom])
+            self.struts.append(temp)
             i+=1
-
-        #self.d_body_disable(self.elements[0].body)          #REPLACE
         for e in graph_edges:
             index_of_from=-1
             index_of_to=-1
@@ -171,15 +156,14 @@ class Evaluator:
                     index_of_to=node_element_matches.index(n)
                 elif index_of_from!=-1 and index_of_to!=-1:
                     break
-                                                        #if index_of_from==-1 and index_of_to==-1:
-                                                        #    print("couldn't find self.elements")
-                                                        #    return 0
+            # if index_of_from==-1 or index_of_to==-1:
+            #     #print("couldn't find self.elements")
+            #     print("You've freaked your last bob you sick fuck")
+            #     return 0
             from_loc=index_of_from%2
             to_loc=index_of_to%2
             from_el_index=index_of_from//2
             to_el_index=index_of_to//2
-
-
 
             new_string=TensString(self.struts[from_el_index],
                             self.struts[to_el_index],self.num_string)
@@ -213,7 +197,6 @@ class Evaluator:
         s:TensString
         for s in self.strings:
             s.set_rod_number(int(graph_edges[self.strings.index(s)].get_label()))
-
 
 
 

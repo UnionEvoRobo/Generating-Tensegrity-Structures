@@ -1,7 +1,7 @@
 """Node module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 3.1
+@version: 4.0
 """
 
 class Node:
@@ -11,6 +11,8 @@ class Node:
         self.label=str(label)
         self.bracket=""
         self.adjacent=[]
+        self.matched=False
+        self.el_num=None
         self.other=None
 
     def set_label(self, new_label):
@@ -20,6 +22,8 @@ class Node:
             new_label (string): Intended new label string
         """
         self.label=new_label
+    def set_el_num(self,new_num):
+        self.el_num=new_num
     def get_label(self):
         """Return the label string.
 
@@ -131,3 +135,7 @@ class Node:
             return False
         else:
             return True
+        
+        
+    def is_matched(self):
+        return self.matched

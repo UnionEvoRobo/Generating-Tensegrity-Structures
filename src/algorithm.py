@@ -2,7 +2,7 @@
 
 
 @author: Daniel Casper
-@version: 3.0
+@version: 4.0
 """
 import os
 import time
@@ -10,17 +10,20 @@ import random
 from evaluator import Evaluator
 from tensegrity import Tensegrity
 
+DEF_L_SYSTEM={1:[2,1,5],2:[4,1,1],3:[4,-1,-1],4:[3,4,4],5:[3,-1,-1]}
 MAX_GRAPH_SIZE=4
+BO_PR=False
 MAX_INT=2147483647
 # EDGES=["1","2","3","4","5"]
 EDGES=[1,2,3,4,5]
-MAX_GENS= 5
+MAX_GENS=5
+NUM_BAR=5
 INIT_POP_SIZE= 10
 X_OVER_RATE = 60
 LS_MUT_RATE=60
 MUT_RATE = 2
 SAMPLE_RATE = 1
-NUM_TRANS=2
+NUM_TRANS=1
 FITNESS_INDEX = 1 #this is the index we care about
 
 
@@ -37,6 +40,7 @@ class Algorithm:
         self.ls_mut_rate=None
         self.mut_rate=None
         self.fitness_index=None
+        self.num_bar=NUM_BAR
         self.do_logging=do_log
         self.world=None
         self.init(in_file_name,seed)
@@ -57,24 +61,40 @@ class Algorithm:
         self.pop=[]
         num_added=0
 
-        print(f"init pop size is: {self.init_pop_size}.")
+        if BO_PR:
+            print(f"init pop size is: {self.init_pop_size}.")
         while num_added<self.init_pop_size:
             tens=None
             if seed is None:
                 tens=Tensegrity(EDGES,None)
-                tens.make_tr3()
+                if self.num_bar==3:
+                    tens.make_tr3()
+                elif self.num_bar==4:
+                    tens.make_tr4()
+                # elif self.num_bar==15:
+                #     tens.make_tr15
+                else:
+                    tens.make_trx(self.num_bar)
             else:
                 tens=Tensegrity(EDGES,seed)
-                tens.make_tr3()
+                if self.num_bar==3:
+                    tens.make_tr3()
+                elif self.num_bar==4:
+                    tens.make_tr4()
+                # elif self.num_bar==15:
+                #     tens.make_tr15
+                else:
+                    tens.make_trx(self.num_bar)
                 tens.find_random_string_labels()
             if self.pop.count(tens)!=0:
                 self.pop.remove(tens)
             else:
                 self.pop.append(tens)
                 num_added+=1
-                tens.new_grow(self.num_trans)
+                tens.new_grow(self.num_trans, self.graph_num)
                 tens.simplify()
-                tens.draw_graph(self.graph_num)
+                if tens.get_l_system().rule_dict!=DEF_L_SYSTEM:
+                    tens.draw_graph(self.graph_num)
                 self.graph_num+=1
         self.evaluate_pop()
 
@@ -89,7 +109,8 @@ class Algorithm:
         """
         if i<len(self.pop):
         #if self.pop[i] is not None:
-            print(f"deleting {i}")
+            if BO_PR:
+                print(f"deleting {i}")
 
 
                         #delete pop[to_del]
@@ -98,7 +119,8 @@ class Algorithm:
             #self.pop[i]=None
             return True
         else:
-            print("Pop::delete_ith_member() - null")
+            if BO_PR:
+                print("Pop::delete_ith_member() - null")
             return False
 
     def add_new_members(self):  #add_new_members(self, cur_gen)
@@ -121,8 +143,22 @@ class Algorithm:
             if self.x_over_rate==-1: #this is for purely random search
                 as1=Tensegrity(EDGES,None)                           #hard coded for now
                 as2=Tensegrity(EDGES,None)
-                as1.make_tr3()
-                as2.make_tr3()
+                if self.num_bar==3:
+                    as1.make_tr3()
+                elif self.num_bar==4:
+                    as1.make_tr4()
+                # elif self.num_bar==15:
+                #     as1.make_tr15
+                else:
+                    as1.make_trx(self.num_bar)
+                if self.num_bar==3:
+                    as2.make_tr3()
+                elif self.num_bar==4:
+                    as2.make_tr4()
+                # elif self.num_bar==15:
+                #     as2.make_tr15
+                else:
+                    as2.make_trx(self.num_bar)
                 print("none")
             else:   #normal xover or mutation.
                 #2 should be missing index or most relevant objective
@@ -139,37 +175,30 @@ class Algorithm:
                 p2:Tensegrity=self.pop[p2index]
                 as1 =Tensegrity(EDGES,p1)
                 as2 =Tensegrity(EDGES,p2)
-                as1.make_tr3()
-                as2.make_tr3()
+                if self.num_bar==3:
+                    as1.make_tr3()
+                elif self.num_bar==4:
+                    as1.make_tr4()
+                # elif self.num_bar==15:
+                #     as1.make_tr15
+                else:
+                    as1.make_trx(self.num_bar)
+                if self.num_bar==3:
+                    as2.make_tr3()
+                elif self.num_bar==4:
+                    as2.make_tr4()
+                # elif self.num_bar==15:
+                #     as2.make_tr15
+                else:
+                    as2.make_trx(self.num_bar)
                 if (self.binom(self.x_over_rate) and (p1_index != p2_index)):
                     # p1x1=random.randrange(1,p1.length_of_genotype())
                     p1x1=random.randrange(1,p1.l_system.size())
                     as1.crossover(p1,p2,p1x1)
                     as2.crossover(p2,p1,p1x1)
-
-                    # print("")
-                    # print("")
-                    # print("")
-                    # print("AS1")
-                    # print("Old:  ")
-                    # print(as1.get_l_system())
                     as1.prim_mut(self.ls_mut_rate)
-                    # print("New:  ")
-                    # print(as1.get_l_system())
-                    # print("")
-                    # print("")
-                    # print("")
-                    # print("AS2")
-                    # print("Old:  ")
-                    # print(as2.get_l_system())
                     as2.prim_mut(self.ls_mut_rate)
-                    # print("New:  ")
-                    # print(as2.get_l_system())
-                    # print("")
-                    # print("")
-                    # print("")
-
-
+                    
                     #iterate through each rule and if prob hits, mutate
 
                 else: #we mutate
@@ -180,17 +209,19 @@ class Algorithm:
                 self.evaluate_member(as1) #don't grow!
                 self.pop.append(as1)
                 num_added+=1
-                as1.new_grow(self.num_trans)
+                as1.new_grow(self.num_trans, self.graph_num)
                 as1.simplify()
-                as1.draw_graph(self.graph_num)
+                if as1.get_l_system().rule_dict!=DEF_L_SYSTEM:
+                    as1.draw_graph(self.graph_num)
                 self.graph_num+=1
             if not self.is_in_pop(as2):
                 self.evaluate_member(as2) # don't grow!
                 self.pop.append(as2)
                 num_added+=1
-                as2.new_grow(self.num_trans)
+                as2.new_grow(self.num_trans, self.graph_num)
                 as2.simplify()
-                as2.draw_graph(self.graph_num)
+                if as2.get_l_system().rule_dict!=DEF_L_SYSTEM:
+                    as2.draw_graph(self.graph_num)
                 self.graph_num+=1
 
     def print_pop(self):
@@ -230,10 +261,12 @@ class Algorithm:
         string_file_name=""
         string_file_name=f"{fname}.str"
         member.f_print_string_labels(string_file_name)
-        print("hello!")
+        if BO_PR:
+            print("hello!")
         result=self.world.evaluate(member)
-        print(result)
-        print("olleh!")
+        if BO_PR:
+            print(result)
+            print("olleh!")
 
     def evaluate_member(self, member:Tensegrity):
         """Evaluate an individual member of the population"""
@@ -299,10 +332,11 @@ class Algorithm:
             self.num_trans=NUM_TRANS
 
             self.fitness_index=FITNESS_INDEX  #this is the index we care about
-
-            print(f"TPop.fscan_config() - filename is {config}")
+            if BO_PR:
+                print(f"TPop.fscan_config() - filename is {config}")
             if not in_file:
-                print(f"cannot open file {config} for input")
+                if BO_PR:
+                    print(f"cannot open file {config} for input")
                 return False
             val=None
             in_string=""
@@ -329,7 +363,8 @@ class Algorithm:
                         case "num_trans":
                             self.num_trans=val
                         case _:
-                            print(f"unrecognized input value to parse_config: {in_string}!")
+                            if BO_PR:
+                                print(f"unrecognized input value to parse_config: {in_string}!")
             in_file.close()
             return True
 
@@ -343,7 +378,8 @@ class Algorithm:
 
         #if _rand_seed==0:
         #    _rand_seed=self.signed_to_unsigned(rand_seed,4)
-        print(f"Random Seed is: {rand_seed}")
+        if BO_PR:
+            print(f"Random Seed is: {rand_seed}")
         random.seed(rand_seed)
 
         tod=time.localtime(rand_seed)
@@ -367,18 +403,20 @@ class Algorithm:
                 except FileNotFoundError:
                     break
 
-
-            print(f"genfile is: {self.out_file_name}")
-            print(f"bestfile is: {best_file_name}")
+            if BO_PR:
+                print(f"genfile is: {self.out_file_name}")
+                print(f"bestfile is: {best_file_name}")
 
             sys_cmd=""
 
             sys_cmd=f"ln -s -f {self.out_file_name} gen.latest.$HOSTNAME"
             if os.system(sys_cmd)!=0:
-                print("Error linking data file!")
+                if BO_PR:
+                    print("Error linking data file!")
             sys_cmd=f"ln -s -f {best_file_name} best.latest.$HOSTNAME"
             if os.system(sys_cmd)!=0:
-                print("Error linking data file!")
+                if BO_PR:
+                    print("Error linking data file!")
 
         #iter_Limit = 1000
 
@@ -398,8 +436,8 @@ class Algorithm:
     def maintain_diversity(self):
         """Aids in curating members of the current population"""
 
-
-        print("hello")
+        if BO_PR:
+            print("hello")
         to_delete=[]
         i=0
         size=self.init_pop_size
@@ -410,27 +448,32 @@ class Algorithm:
             #cur_val=random.randint(1,10)
             j=i-5
             while -j>=0 and -j<len(self.pop):
-                print(f"maintain: i:{size+i} j:{size+j}")
+                if BO_PR:
+                    print(f"maintain: i:{size+i} j:{size+j}")
                 jmember:Tensegrity=self.pop[i]
                 other_vals=jmember.get_objective_vals()
                 other_val=other_vals[self.fitness_index]
                 #other_val=random.randint(1,10)
                 if cur_val==other_val:
-                    print(f"{cur_val} == {other_val}, will delete {size+j}")
+                    if BO_PR:
+                        print(f"{cur_val} == {other_val}, will delete {size+j}")
                     to_delete.append((self.pop[j],size+j))
                     j-=1
                 else:
                     break
             i=j
         if len(to_delete)!=0:
-            print("erasing...")
+            if BO_PR:
+                print("erasing...")
             for i in to_delete:
                 to_del=i[0]
-                print(f"deleting {i[1]}")
+                if BO_PR:
+                    print(f"deleting {i[1]}")
                 self.pop.remove(to_del)
                 #print(f"and erasing {None}")
                 #self.delete_ith_member(to_delete[i])
-            print("done erasing")
+            if BO_PR:
+                print("done erasing")
 
     def is_in_pop(self, ts):
         """Checks if a tensegrity is in the current population
@@ -469,13 +512,17 @@ class Algorithm:
         """
         from_val=len(self.pop)//2
         #from_val=self.init_pop_size/2
-        print(f"culling - from_val+1 is {from_val+1}, pop.size is: {len(self.pop)}")
+        if BO_PR:
+            print(f"culling - from_val+1 is {from_val+1}, pop.size is: {len(self.pop)}")
         for i in range (from_val+1,len(self.pop)):
-            print(f"deleting {i}")
+            if BO_PR:
+                print(f"deleting {i}")
             self.pop.pop(from_val+1)
-        print("done culling")
+        if BO_PR:
+            print("done culling")
         self.pop=self.pop[0:from_val]
-        print("done resizing")
+        if BO_PR:
+            print("done resizing")
 
 
 
@@ -500,9 +547,17 @@ class Algorithm:
 
 if __name__=='__main__':
     tens_seed=Tensegrity(EDGES)
-    tens_seed.make_tr3()
-    tens_seed.new_grow(NUM_TRANS)
-    tens_seed.simplify()
+    if NUM_BAR==3:
+        tens_seed.make_tr3()
+        tens_seed.new_grow(NUM_TRANS, 0)
+    elif NUM_BAR==4:
+        tens_seed.make_tr4()
+        tens_seed.new_grow(NUM_TRANS, 0)
+    # elif NUM_BAR==15:
+    #     tens_seed.make_tr15()
+    else:
+        tens_seed.make_trx(NUM_BAR)
+        tens_seed.new_grow(NUM_TRANS, 0)
     tens_seed.draw_graph(0)
     FILE_NAME="inFileName.txt"
     algo=Algorithm(FILE_NAME,True,tens_seed)

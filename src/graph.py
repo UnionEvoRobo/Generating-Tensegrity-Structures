@@ -1,10 +1,12 @@
 """Graph class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 5.0
+@version: 6.0
 """
 
 import random
+import networkx as nx
+import networkx.algorithms.approximation as appr
 from l_system import LSystem
 from transformer import Transformer
 from node import Node
@@ -15,13 +17,15 @@ import graphviz  # doctest: +NO_EXE
 class Graph:
     """Graph class for the generation of complex tensegrity structures."""
 
-    def __init__(self, rules, edge_types):
+    def __init__(self, rules, edge_types, bars):
         self.dot = graphviz.Digraph(comment='Tensegrity Object Graph')
         self.edge_types = edge_types
         self.rules = rules
         self.transformer = Transformer(self)
         self.edge_list = []
+        self.protected_nodes=[]
         self.node_list = []
+        self.bar_num=bars
         self.bracket_nodes = []
         self.node_number = 0
         self.mut=False
@@ -30,7 +34,7 @@ class Graph:
         """Getter for individual rules in the rule dictionary
 
         Args:
-            key (string): string containing the dictionary 
+            key (string): string containing the dictionary
             key for the desired rule
 
         Returns:
@@ -42,7 +46,7 @@ class Graph:
         """Getter for the list of different edge types
 
         Returns:
-            list: list containing strings of the different 
+            list: list containing strings of the different
             possible edge types
         """
         return self.edge_types
@@ -81,7 +85,7 @@ class Graph:
 
     def create_graph(self):
         """Generates a dictionary representing the initial graph to be
-        fed into the transformer and then runs the dictionary (edge_dict) 
+        fed into the transformer and then runs the dictionary (edge_dict)
         through the transformer however many times is desired.
         """
         while self.node_number < 4:
@@ -92,25 +96,31 @@ class Graph:
         self.add_edge("D", self.node_list[3], self.node_list[0])
         self.add_edge("E", self.node_list[1], self.node_list[3])
 
-    def transform(self, num_trans):
+    def transform(self, size, print_intermed, graph_num, def_l):
         """Passes the graph through the transformer a number of times
 
         Args:
-            num_trans (int): the desired number of passes through 
+            num_trans (int): the desired number of passes through
             the transformer
         """
         transformations = 0
-        while transformations < (num_trans):
+        marg=.25
+        while transformations < (size):
             self.transformer.transform()
+            if print_intermed and self.rules.rule_dict!=def_l:
+                self.draw_graph(graph_num+marg)
+            marg+=.25
             transformations += 1
+        self.generate_bracket_edges()
+
 
     def swap_rule(self, key, new_rule):
         """Changes the definition of the rule at the indicated key
 
         Args:
-            key (string): string containing the dictionary 
+            key (string): string containing the dictionary
             key for the rule that will be changed
-            
+
             new_rule (string): string containing the new rule
         """
         self.rules[key] = new_rule
@@ -119,7 +129,7 @@ class Graph:
         """Creates and adds a new node to the graph
 
         Args:
-            bracket (string): string indicating what 
+            bracket (string): string indicating what
             the bracket property will be
 
         Returns:
@@ -135,7 +145,7 @@ class Graph:
 
     def add_edge(self, label, start, end):
         """Creates and adds a new edge to the graph
-        
+
         Args:
             label (string): _description_
             start (Node): the origin node of the edge
@@ -149,7 +159,7 @@ class Graph:
             end.add_edge(start)
 
     def generate_bracket_edges(self):
-        """Creates new connecting edges between 
+        """Creates new connecting edges between
             nodes with matching bracket types
         """
         for node1 in self.bracket_nodes:
@@ -164,8 +174,8 @@ class Graph:
                         node1.add_edge(node2)
                         node2.add_edge(node1)
 
-    def adjacent(self, node1, node2):
-        """Determines whether two nodes in the graph have an 
+    def adjacent(self, node1:Node, node2:Node):
+        """Determines whether two nodes in the graph have an
         edge connecting them (are adjacent).
 
         Args:
@@ -181,7 +191,7 @@ class Graph:
         """Return a list of all nodes adjacent to node1.
 
         Args:
-            node1 (Node): The node whose list of 
+            node1 (Node): The node whose list of
             adjacent nodes is desired
 
         Returns:
@@ -189,16 +199,20 @@ class Graph:
         """
         return node1.get_adjacent()
 
-    def remove_node(self, node1):
+    def remove_node(self, node1:Node):
         """Removes a node from the graph.
 
         Args:
             node1 (Node): The node that is being removed
         """
-        self.node_list.remove(node1)
+        if node1 not in self.protected_nodes:
+            adj=node1.get_adjacent()
+            for node2 in adj:
+                self.remove_edge1(node1,node2)
+            self.node_list.remove(node1)
 
-    def remove_edge(self, start_node, end_node):
-        """Removes an edge from the graph 
+    def remove_edge1(self, start_node, end_node):
+        """Removes an edge from the graph
 
         Args:
             start_node (Node): The starting node of the desired edge
@@ -208,12 +222,45 @@ class Graph:
             boolean: True if the edge was deleted and false if not
         """
         for edge in self.edge_list:
-            if edge.contains(start_node) and edge.contains(end_node):
+            if (edge.contains(start_node) or start_node is None) and (edge.contains(end_node) or end_node is None):
                 self.edge_list.remove(edge)
-                start_node.remove_edge(end_node)
-                end_node.remove_edge(start_node)
+                if start_node is not None and end_node is not None:
+                    start_node.remove_edge(end_node)
+                    end_node.remove_edge(start_node)
                 return True
         return False
+
+    def remove_edge2(self, edge:Edge):
+        """Removes an edge from the graph
+
+        Args:
+            start_node (Node): The starting node of the desired edge
+            end_node (Node): The end node of the desired edge
+
+        Returns:
+            boolean: True if the edge was deleted and false if not
+        """
+        self.edge_list.remove(edge)
+        edge.get_start().remove_edge(edge.get_end())
+        edge.get_end().remove_edge(edge.get_start())
+
+    def reassign_edge(self, edge:Edge, new_node:Node, side):
+        if side>0:
+            if not self.adjacent(new_node,edge.get_end()):
+                edge.get_end().remove_edge(edge.get_start())
+                edge.set_start(new_node)
+                new_node.add_edge(edge.get_end())
+                edge.get_end().add_edge(new_node)
+            else:
+                self.remove_edge2(edge)
+        elif side<0:
+            if not self.adjacent(new_node,edge.get_start()):
+                edge.get_start().remove_edge(edge.get_end())
+                edge.set_end(new_node)
+                new_node.add_edge(edge.get_start())
+                edge.get_start().add_edge(new_node)
+            else:
+                self.remove_edge2(edge)
 
     def clear_nodes(self):
         """Resets the degree of all nodes in the graph.
@@ -274,13 +321,13 @@ class Graph:
         self.add_edge('2', self.node_list[3], self.node_list[4])
         self.add_edge('1', self.node_list[3], self.node_list[5])
 
-    def grow_while_connecting_rods(self, print_intermed):
+    def grow_while_connecting_rods(self, size, print_intermed, graph_num, def_l):
         #(self, size, print_intermed)
         """Grows an initial graph using the indicated l_system and size parameters
 
         Args:
             size (int): Number of iterations through the transformer
-            print_intermed (boolean): Whether or not the method should 
+            print_intermed (boolean): Whether or not the method should
                                     print intermediate stages of graph growth
 
         Returns:
@@ -291,22 +338,8 @@ class Graph:
         print("growing...")
         oldnodes = self.order()
         oldedges = self.size()
-        self.transformer.transform()
-        #add_stubs()
-        if print_intermed:
-            print("print graphviz here")
-            #print_graphviz()
-            #getchar()
+        self.transform(size,graph_num,print_intermed,def_l)
         self.generate_bracket_edges()
-        if print_intermed:
-            print("print graphviz here")
-            #print_graphviz()
-            #getchar()
-        self.match_nodes()
-        if print_intermed:
-            print("print graphviz here")
-            #print_graphviz()
-            #getchar()
         curnodes = self.order()
         curedges = self.size()
         if (oldnodes == curnodes and oldedges == curedges):
@@ -315,7 +348,7 @@ class Graph:
         return growing
 
     def simplify_graph(self):
-        """Removes all nodes that have less than 3 edges 
+        """Removes all nodes that have less than 3 edges
         beginning and ending at its location.
         """
 
@@ -327,17 +360,23 @@ class Graph:
             goodbye_nodes = []
             loop = False
             for node in self.node_list:
-                if node.is_extraneous():
+                if node.is_extraneous() and node not in self.protected_nodes:
                     loop = True
                     goodbye_nodes.append(node)
                     for edge in self.edge_list:
                         if edge.contains(node) and goodbye_edges.count(
                                 edge) == 0:
                             goodbye_edges.append(edge)
+            edge:Edge
+            for edge in self.edge_list:
+                if edge.get_start() is None or edge.get_end() is None:
+                    if edge in goodbye_edges:
+                        goodbye_edges.remove(edge)
+                    self.remove_edge1(edge.get_start(), edge.get_end())
             for i in goodbye_nodes:
                 self.remove_node(i)
             for i in goodbye_edges:
-                self.remove_edge(i.get_start(), i.get_end())
+                self.remove_edge1(i.get_start(), i.get_end())
 
     def find_random_string_labels(self):
         """Reassigns the lables of strings in the graph
@@ -393,6 +432,7 @@ class Graph:
         """Return a list of the labels of all edges
         """
         ret = []
+        i:Edge
         for i in self.edge_list:
             ret.append(i.get_label())
         return ret
@@ -400,7 +440,7 @@ class Graph:
     def mutate_string_labels(self):
         """Change the label of a string in the graph at random
         """
-        randnode = random.randint(0, (self.node_number - 1))
+        randnode = random.randint(0, (len(self.node_list) - 1))
         self.assign_random_label_for_edges_to_node(self.node_list[randnode])
 
     def find_matching_pairs_recursively(self):
@@ -411,14 +451,12 @@ class Graph:
         """
         nodes = self.node_list
         all_pairs = []
-        for i in range(enumerate(nodes)):
-            #for (unsigned int i = 0 i < _nodes.size() i++){
+        for i,inode in enumerate(nodes):
             my_matches = []
-            for j in range(enumerate(nodes)):
-                #for (unsigned int j = 0 j < _nodes.size() j++){
-                if i != j:
-                    if not self.adjacent(nodes[i], nodes[j]):
-                        my_matches.append(j)
+            for jnode in nodes:
+                if inode!=jnode:
+                    if not self.adjacent(inode, jnode):
+                        my_matches.append(jnode)
             all_pairs.append(my_matches)
         found_matches = []
 
@@ -427,9 +465,52 @@ class Graph:
                 f"uh oh! different allPairs ({len(all_pairs)}) than nodes ({len(nodes)})!"
             )
         found_matches = self.recurse_find_pairs(0, all_pairs, found_matches)
+        for i in found_matches:
+            for j in i:
+                self.protected_nodes.append(j)
+        self.purify_graph(found_matches)
         return found_matches
 
-    def recurse_find_pairs(self, curindex, all_pairs, matches):
+    def purify_graph(self,found):
+        i=0
+        while i<len(self.node_list):
+            # if not self.node_list[i].is_matched():
+            if self.node_list[i] not in self.protected_nodes:
+                self.remove_node(self.node_list[i])
+            else:
+                i+=1
+        i=0
+        self.smallest_node()
+        while i<len(self.edge_list):
+            edge:Edge=self.edge_list[i]
+            if (edge.get_end() not in self.node_list) and (edge.get_start() not in self.node_list):
+                    self.remove_edge1(edge.get_start(),edge.get_end())
+            elif (edge.get_end() not in self.node_list):
+                    self.reassign_edge(edge, self.smallest_node(),-1)
+            elif (edge.get_start() not in self.node_list):
+                    self.reassign_edge(edge, self.smallest_node(),1)
+            else:
+                i+=1
+        while len(found)>self.bar_num:
+            popped=found.pop()
+            for x in popped:
+                self.remove_node(x)
+                self.simplify_graph()
+        self.smallest_node()
+
+    def smallest_node(self):
+        nodes=self.node_list
+        n = len(nodes)
+        for i in range(n - 1):
+            min_idx = i
+            for j in range(i + 1, n):
+                if nodes[j].get_degree() < nodes[min_idx].get_degree():
+                    min_idx = j
+        return nodes[min_idx]
+
+
+
+    def recurse_find_pairs(self, curindex:int, all_pairs:list, matches:list):
         """Find pairs of nodes with matching bracket labels
 
         Args:
@@ -440,58 +521,37 @@ class Graph:
         Returns:
             list: list of paired nodes
         """
-        if curindex == len(all_pairs):
+        nodes=self.node_list
+        if curindex==len(all_pairs):
             return matches
         else:
-            my_pairs = all_pairs[curindex]  #every possible good pair
-            temp_matches = []  #copy the current match set
-            for j in range(enumerate(matches)):
-                temp_matches.append(matches[j])
-            my_loc = matches[curindex]
-            #myLoc = find(matches.begin(), matches.end(),(int)curindex)
-            curmatch = -1
-            if my_loc is not None:  # check to i've already been matched
-                curmatch = -1
-                for m in range(enumerate(matches)):
-                    if matches[m] == my_loc:
-                        curmatch = m
-                temp_matches.append(curmatch)
-                found_matches = self.recurse_find_pairs(
-                    curindex + 1, all_pairs, temp_matches)
-                if (len(found_matches) == len(all_pairs)) and (
-                        found_matches[len(found_matches) - 1] != -1):
-                    return found_matches
-                else:
-                    temp_matches.pop(0)
-            else:  #i haven't already been matched
-                #so recurse through all possible matches
-                for i in range(enumerate(my_pairs)):
-                    curmatch = my_pairs[i]
-                    match_loc = matches[curmatch]
-                    if match_loc is not None:
-                        temp_matches.append(curmatch)
-                        found_matches = self.recurse_find_pairs(
-                            curindex + 1, all_pairs, temp_matches)
-                        if found_matches.size() == len(all_pairs) and (
-                                found_matches[len(found_matches) - 1] != -1):
-                            return found_matches
-                        else:
-                            temp_matches.append()
-        temp_matches.append(-1)
-        #if we get here then no matches were found
-        return temp_matches
+            my_pairs:list=all_pairs[curindex]
+            temp_matches=[]
+            for j in matches:
+                temp_matches.append(j)
+            i:Node
+            # my_pairs.reverse()
+            for i in my_pairs:
+                if not nodes[curindex].is_matched():
+                    match=i
+                    if not match.is_matched():
+                        match.matched=True
+                        nodes[curindex].matched=True
+                        temp_matches.append((match, nodes[curindex]))
+                        found_matches=self.recurse_find_pairs(curindex+1,all_pairs,temp_matches)
+                        return found_matches
+            return self.recurse_find_pairs(curindex+1,all_pairs,temp_matches)
 
     def grow_node_by_node_until_size(self, size):
-        """Grows graph until the graph is 
+        """Grows graph until the graph is
         of a specified order of good nodes
 
         Args:
-            size (int): desired order of the graph 
+            size (int): desired order of the graph
 
         Returns:
             int: indicates whether the graph was successfully grown
         """
-        #reset()
         notgrowing = 0
         iters = 0
         stay = True
@@ -499,15 +559,15 @@ class Graph:
             oldnodes = self.order()
             oldedges = self.size()
             self.transformer.transform()
-            self.generate_bracket_edges()
             curnodes = self.order()
             curedges = self.size()
             if (oldnodes == curnodes and oldedges == curedges):
                 notgrowing = 1
             iters += 1
             if (self.number_of_good_nodes()
-                    < size) and (notgrowing == 0) and (self.order() < 80):
+                    >= size) or (notgrowing == 1) or (self.order() >= 80):
                 stay = False
+        self.generate_bracket_edges()
         self.simplify_graph()
         if notgrowing:
             return -1
@@ -592,7 +652,9 @@ class Graph:
         and edges respectively using the information contained within
         the node and edge objects.
         """
-        i:Node
+        self.dot.clear()
+        self.dot.comment=f'{self.rules}'
+        # self.dot = graphviz.Digraph(comment='Tensegrity Object Graph')        i:Node
         for i in self.node_list:
             if i!=[]:
                 self.dot.node(i.get_label())
@@ -602,4 +664,5 @@ class Graph:
         try:
             self.dot.render(f'doctest-output/graph_num_{graph_name_num}.gv').replace('\\', '/')
         except graphviz.backend.execute.ExecutableNotFound:
-            print("Graph Made")
+            print(f"Graph {graph_name_num} Made")
+            # print(self.rules)

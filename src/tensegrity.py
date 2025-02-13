@@ -1,12 +1,13 @@
 """Tensegrity module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
 
 import random
 from graph import Graph
 from l_system import LSystem
+from strut import Strut
 
 MAX_INT=2147483647
 # DEF_L_SYSTEM={"1":"2{1}5", "2":"4{1}1", "3":"4", "4":"3{4}4", "5":"3"}
@@ -17,33 +18,25 @@ class Tensegrity:
 
     def __init__(self, edges, seed=None):
         if seed is not None:
-            self.graph=seed.get_graph()
             seed_rules=seed.get_l_system()
             rules={}
             for i in edges:
                 rules[i]=seed_rules.get_rule(i)
             self.l_system=LSystem(rules)
-            self.pairs=seed.get_pairs()
-            self.objectives=seed.get_objective_vals()
-            self.num_elements=seed.get_num_elements()
-            self.elements_to_shuffle=seed.get_elements_to_shuffle()
-            self.strings_to_shuffle=seed.get_strings_to_shuffle()
-            self.genome=seed.get_genome()
-            self.string_labels=seed.get_string_labels()
-            self.indexes_to_ignore=seed.get_indexes_to_ignore()
             self.edge_types=seed.get_edge_types()
         else:
-            self.graph=None
             self.l_system=LSystem(DEF_L_SYSTEM)
-            self.pairs=[]
-            self.objectives=[]
-            self.num_elements=0
-            self.elements_to_shuffle=[]
-            self.strings_to_shuffle=[]
-            self.genome=[]
-            self.string_labels=[]
-            self.indexes_to_ignore=[]
             self.edge_types=edges
+        self.graph=None
+        self.pairs=[]
+        self.struts=[]
+        self.objectives=[]
+        self.num_elements=0
+        self.elements_to_shuffle=[]
+        self.strings_to_shuffle=[]
+        self.genome=[]
+        self.string_labels=[]
+        self.indexes_to_ignore=[]
 
     def get_graph(self):
         """Getter for the tensegrity's graph
@@ -108,6 +101,14 @@ class Tensegrity:
             list: a list containing the genome attribute of a tensegrity
         """
         return self.genome
+    
+    def get_struts(self):
+        """Getter for the genome attribute of a tensegrity
+
+        Returns:
+            list: a list containing the genome attribute of a tensegrity
+        """
+        return self.struts
 
     def get_string_labels(self):
         """Getter for the string_labels attribute
@@ -243,30 +244,50 @@ class Tensegrity:
     def make_tr3(self):
         """Make a three-bar tensegrity
         """
-        self.graph=Graph(self.l_system, self.edge_types)
+        self.graph=Graph(self.l_system, self.edge_types, 3)
         self.graph.make_tr3()
+        gnomes=self.graph.find_matching_pairs_recursively()
         self.pairs=[]
-        self.pairs.append(3)
-        self.pairs.append(4)
-        self.pairs.append(5)
-        self.pairs.append(0)
-        self.pairs.append(1)
-        self.pairs.append(2)
+        self.struts=[]
+        half=(len(gnomes)//2)
+        for i in range (half):
+            strut=gnomes[i]
+            self.struts.append(Strut(strut[0],strut[1]))
+        #self.struts.append(Strut(gnomes[1],gnomes[4]))
+        #self.struts.append(Strut(gnomes[2],gnomes[5]))
+        #self.pairs.append(3)
+        #self.pairs.append(0)
+        #self.pairs.append(4)
+        #self.pairs.append(1)
+        #self.pairs.append(5)
+        #self.pairs.append(2)
 
     def make_tr4(self):
         """Make a three-bar tensegrity
         """
-        self.graph = Graph(self.l_system, self.edge_types)
+        self.graph = Graph(self.l_system, self.edge_types, 4)
         self.graph.make_tr4()
         self.pairs=[]
-        self.pairs.append(4)
-        self.pairs.append(5)
-        self.pairs.append(6)
-        self.pairs.append(7)
-        self.pairs.append(0)
-        self.pairs.append(1)
-        self.pairs.append(2)
-        self.pairs.append(3)
+        self.struts=[]
+        nodes=self.graph.get_nodes()
+        gnomes=self.graph.find_matching_pairs_recursively()
+        for x in gnomes:
+            edge=[]
+            for j in x:
+                edge.append(j.get_label())
+            print (edge)
+        self.struts.append(Strut(nodes[4],nodes[0]))
+        self.struts.append(Strut(nodes[5],nodes[1]))
+        self.struts.append(Strut(nodes[6],nodes[2]))
+        self.struts.append(Strut(nodes[7],nodes[3]))
+        #self.pairs.append(4)
+        #self.pairs.append(5)
+        #self.pairs.append(6)
+        #self.pairs.append(7)
+        #self.pairs.append(0)
+        #self.pairs.append(1)
+        #self.pairs.append(2)
+        #self.pairs.append(3)
 
     def make_tr15(self):
         """Make a fifteen-bar tensegrity
@@ -279,13 +300,32 @@ class Tensegrity:
         self.grow(30,0)
         #hard-code element numbers
         elnums=[1,2,3,1,4,3,5,2,6,4,7,5,8,6,9,7,10,8,11,9,12,10,13,11,14,12,15,13,15,14]
-        gnomes=self.graph.get_nodes()
-        for g in (enumerate(gnomes)):
+        gnomes=self.get_pairs()
+        for g in range(len(gnomes)):
             #printf("setting %d %d\n",g,elnums[g]);
-            gnomes[g].setElementNum(elnums[g])
+            self.graph.get_nodes()[g].set_el_num(elnums[g])
+    
+    def make_trx(self,num_bars):
+        """Make an x-bar tensegrity
+        """
+        #self.l_system.fscan("tr15.tens")
+        self.graph = Graph(self.l_system,self.edge_types,num_bars)
+        self.graph.make_tr3()
+        self.grow(num_bars*2,0)
+        gnomes=self.get_pairs()
+        # for x in gnomes:
+        #     edge=[]
+        #     for j in x:
+        #         edge.append(j.get_label())
+        #     print (edge)
+        # print (len(gnomes))
+        for i in gnomes:
+            self.struts.append(Strut(i[0],i[1]))
+        # for g in range(len(gnomes)):
+        #     #printf("setting %d %d\n",g,elnums[g]);
+        #     self.graph.get_nodes()[g].set_el_num(elnums[g])
 
-
-    def new_grow(self, size):
+    def new_grow(self, size, graph_num):
         """Grows the contained graph using the transformer
 
         Args:
@@ -294,10 +334,10 @@ class Tensegrity:
         Returns:
             Graph: the resultant graph after transformation
         """
-        # result = self.graph.grow_while_connecting_rods(size, self.l_system, 0)
+        # result = self.graph.grow_while_connecting_rods(size, 1, graph_num, DEF_L_SYSTEM)
         # result = self.graph.grow_while_connecting_rods(0)
-        result = self.graph.transform(size)
-        result = self.graph.generate_bracket_edges()
+        result = self.graph.transform(size, 1, graph_num, DEF_L_SYSTEM)
+        # result = self.graph.generate_bracket_edges()
         return result
 
     def simplify(self):
@@ -327,19 +367,24 @@ class Tensegrity:
             # if it is too small or an odd number of nodes
             #keep trying a few more times
             if ((self.graph.order() < size) or (self.graph.order()%2 != 0)):
-                do=True
-                while do:
-                    self.graph.grow_node_by_node_until_size(size+tries)
-                    # self.graph.grow_node_by_node_until_size(size+tries,self.l_system,print_intermed)
-                    tries+=1
-                    if ((self.graph.order() < size) or (self.graph.order()%2 != 0)) and (
-                        tries < 10):
-                        do=False
-                if ((self.graph.order() >= size) and (self.graph.order()%2 == 0)):
-                    success = 1
+                if self.graph.order()>80:
+                    self.graph.remove_node(self.graph.get_nodes()[-1])
+                    success=1
+                else:
+                    do=True
+                    while do:
+                        self.graph.grow_node_by_node_until_size(size+tries)
+                        # self.graph.grow_node_by_node_until_size(size+tries,self.l_system,print_intermed)
+                        tries+=1
+                        if ((self.graph.order() < size) or (self.graph.order()%2 != 0)) and (
+                            tries < 10):
+                            do=False
+                    if ((self.graph.order() >= size) and (self.graph.order()%2 == 0)):
+                        success = 1
             else:# it is good
                 success = 1
         if success:
+            # self.draw_graph(0)
             self.find_pairs()
         return success
 

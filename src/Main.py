@@ -4,8 +4,9 @@
 @version: 5.0
 """
 
+from edge import Edge
 from graph import Graph
-import graphviz  # doctest: +NO_EXE
+import graphviz # doctest: +NO_EXE
 dot = graphviz.Digraph(comment='Tensegrity Object Graph')
 
 class Main:
@@ -23,8 +24,9 @@ class Main:
         for i in self.graph.node_list:
             if i!=[]:
                 dot.node(i.get_label())
+        i:Edge
         for i in self.graph.edge_list:
-            dot.edge(i.get_start_label(), i.get_end_label(), i.get_label())
+            dot.edge(str(i.get_start_label()),str(i.get_end_label()),str(i.get_label()))
 
     def remove_extraneous_nodes(self):
         """Removes all nodes that have less than 3 edges 
@@ -45,17 +47,24 @@ class Main:
             for i in goodbye_nodes:
                 self.graph.remove_node(i)
             for i in goodbye_edges:
-                self.graph.remove_edge(i.get_start(),i.get_end())
+                self.graph.remove_edge1(i.get_start(),i.get_end())
 
 if __name__=='__main__':
-    rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
+    # rule_dict={"A":"A>B{a}E", "B":"B>D{a}A", "C":"C>D", "D":"D>C{d}D", "E":"E>C"}
     NUM_TRANS=2
-    edge_types=["A","B","C","D","E"]
-    OUTPUT_NAME='dfs'
+    # edge_types=["A","B","C","D","E"]
+    #rule_dict={"1":"2{1}5", "2":"4{1}1", "3":"4", "4":"3{4}4", "5":"3"}
+    rule_dict={1:[2, 1, 5], 2:[4, 1, 1], 3:[3, 1, 3], 4:[3, 1, 1], 5:[3, -1, -1]}
+    # rule_dict={1:[2,1,5],2:[-1,1,1],3:[4,-1,-1],4:[3,4,4],5:[3,-1,-1]}
+    edge_types=[1,2,3,4,5]
+    OUTPUT_NAME='OMG'
     main = Main(rule_dict,edge_types)
     main.graph.make_tr3()
     main.graph.transform(NUM_TRANS)
     main.graph.generate_bracket_edges()
     main.graph.simplify_graph()
     main.draw_graph()
-    dot.render(f'doctest-output/{OUTPUT_NAME}.gv').replace('\\', '/')
+    try:
+        dot.render(f'doctest-output/{OUTPUT_NAME}.gv').replace('\\', '/')
+    except graphviz.backend.execute.ExecutableNotFound:
+        print("Graph error")
