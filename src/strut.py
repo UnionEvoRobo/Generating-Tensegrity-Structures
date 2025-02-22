@@ -5,11 +5,7 @@
 """
 
 class Strut:
-    """Strut class for the generation of complex tensegrity structures."""
-
-    ELEM_UNIT_LEN=12
-    ELEM_UNIT_RAD=12
-
+    """Strut class for the generation of complex tensegrity structures.""" 
 
     def __init__(self,top_node=None,bottom_node=None):
         self.top=top_node

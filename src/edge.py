@@ -2,8 +2,10 @@
 
 
 @author: Daniel Casper
-@version: 2.1
+@version: 3.0
 """
+
+from node import Node
 class Edge:
     """Edge class for the generation of complex tensegrity structures."""    
     def __init__(self, label, start, end):
@@ -18,7 +20,8 @@ class Edge:
             new_start (Node): The node intended as the 
             starting location of the edge
         """
-        self.start=new_start
+        self.start:Node=new_start
+
     def set_end(self, new_end):
         """Setter for the ending node property of an edge
 
@@ -26,7 +29,8 @@ class Edge:
             new_start (Node): The node intended as the 
             ending location of the edge
         """
-        self.end=new_end
+        self.end:Node=new_end
+
     def get_label(self):
         """Return the label string.
 
@@ -35,7 +39,7 @@ class Edge:
         """
         return self.label
 
-    def get_start(self):
+    def get_start(self) -> Node:
         """Return the start node.
 
         Returns:
@@ -44,7 +48,7 @@ class Edge:
         """
         return self.start
 
-    def get_end(self):
+    def get_end(self)  -> Node:
         """Return the end node.
 
         Returns:
@@ -52,6 +56,21 @@ class Edge:
             to by self.end
         """
         return self.end
+
+    def get_endpoint(self, side):
+        """Return the start or end of the edge
+
+        Args:
+            side (int): 1 if getting start, -1 if getting end
+
+        Returns:
+            Node: the start or end node of the edge
+        """
+        if side>0:
+            return self.start
+        return self.end
+
+
     def get_start_label(self):
         """Return the start node's label.
 
@@ -74,7 +93,7 @@ class Edge:
             return str(self.end.get_label())
         return "NONE"
 
-    def equals(self, edge2):
+    def equals(self, edge2:Node):
         """Compares to edge objects based on their start and end nodes. 
         
         If two edges are the reverse of each other they are still equal.
@@ -85,9 +104,10 @@ class Edge:
         Returns:
             boolean: Returns true if the two edges are equal. False if not.
         """
-        if (self.get_start()==edge2.get_start() or self.get_start()==edge2.get_end()):
-            return (self.get_end()==edge2.get_end() or self.get_end()==edge2.get_start())
+        if (self.start==edge2.get_start() or self.start==edge2.get_end()):
+            return (self.end==edge2.get_end() or self.end==edge2.get_start())
         return False
+
     def is_unique(self, edges):
         """Compares a given edge to all edges in the edge_list from the main module. 
         If it is not equal to any edge in the list then it is unique.
@@ -102,6 +122,7 @@ class Edge:
             if self.equals(i):
                 return False
         return True
+
     def contains(self, node):
         """Checks an edge for whether or not it contains a given node.
 
@@ -112,20 +133,7 @@ class Edge:
             boolean: Returns true if the edge's start or end node 
             matches the given nodeLable. False if not.
         """
-        return node==self.get_start() or node==self.get_end()
-    def swap_ends(self, new_end):
-        """Replaces the current end node of the edge with 
-        the designated new_end
-
-        Args:
-            new_end (Node): the intended new end location of the edge
-
-        Returns:
-            Node: Returns the former ending node of the edge
-        """
-        cur_end=self.get_end()
-        self.set_end(new_end)
-        return cur_end
+        return node in (self.start, self.end)
 
     def change_label(self, new_label):
         """Change the label of the edge to a new value.
@@ -134,3 +142,11 @@ class Edge:
             new_label (_type_): the new contents for self.label
         """
         self.label=new_label
+
+    def is_terminating(self):
+        """Determines whether an edge begins or ends at nothing
+
+        Returns:
+            bool: whether an edge begins or ends at nothing
+        """
+        return self.start is None or self.end is None

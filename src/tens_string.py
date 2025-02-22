@@ -11,8 +11,6 @@ class TensString:
     def __init__ (self, node1, node2,num):
         self.node1=node1
         self.node2=node2
-        #self.to_loc=to_loc
-        #self.from_loc=from_loc
         self.node_stub=None
         self.rod_number=num
 

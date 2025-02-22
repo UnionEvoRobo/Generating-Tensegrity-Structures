@@ -1,7 +1,7 @@
 """Tensegrity module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 3.0
+@version: 4.0
 """
 
 import random
@@ -24,9 +24,11 @@ class Tensegrity:
                 rules[i]=seed_rules.get_rule(i)
             self.l_system=LSystem(rules)
             self.edge_types=seed.get_edge_types()
+            self.comment=f'{seed.get_comment()}\n\n// {self.l_system}'
         else:
             self.l_system=LSystem(DEF_L_SYSTEM)
             self.edge_types=edges
+            self.comment=f'{self.l_system}'
         self.graph=None
         self.pairs=[]
         self.struts=[]
@@ -61,6 +63,14 @@ class Tensegrity:
             list: the list of pairs in the tensegrity
         """
         return self.pairs
+
+    def get_comment(self):
+        """Getter for the comment string
+
+        Returns:
+            string: the comment string to be printed in the graph .dot file
+        """
+        return self.comment
 
     def get_objective_vals(self):
         """Getter for the objectives attribute
@@ -101,7 +111,7 @@ class Tensegrity:
             list: a list containing the genome attribute of a tensegrity
         """
         return self.genome
-    
+
     def get_struts(self):
         """Getter for the genome attribute of a tensegrity
 
@@ -135,11 +145,6 @@ class Tensegrity:
         """
         return self.edge_types
 
-
-
-
-
-
     def set_string_labels_from_graph(self):
         """Get a list of the labels of all strings in the graph
         """
@@ -157,6 +162,7 @@ class Tensegrity:
             parent2 (Tensegrity): the second parent tensegrity used in the mutation
             another_var (int): _description_
         """
+        self.comment+="\n// Crossed"
         parent1:Tensegrity=parent1
         parent2:Tensegrity=parent2
         l1=parent1.get_l_system()
@@ -167,15 +173,6 @@ class Tensegrity:
             l_system.set_rule(i,l1.get_rule(i))
         for i in range(int(another_var)+1,l2.size()+1):
             l_system.set_rule(i,l2.get_rule(i))
-
-
-        # self.genome=[]
-        # p1gen=parent1.get_genome()
-        # p2gen=parent2.get_genome()
-        # for i in range (int(another_var)):
-        #     self.genome.append(p1gen[i])
-        # for i in range(int(another_var),len(p2gen)):
-        #     self.genome.append(p2gen[i])
 
     def find_random_string_labels(self):
         """Find the labels of random strings"""
@@ -189,11 +186,6 @@ class Tensegrity:
             file_name (string): File path that we are printing the labels to
         """
         with open(f_name,"w+",encoding="utf-8") as out_file:
-            #to_wrt="["
-            #j=0
-            #while j<(len(self.string_labels)-1):
-            #    to_wrt+=j+", "
-            #to_wrt+=self.string_labels[-1] + "]"
             out_file.write(str(self.string_labels))
             out_file.close()
 
@@ -204,11 +196,6 @@ class Tensegrity:
             file_name (string): File path that we are printing the labels to
         """
         with open(f_name,"w+",encoding="utf-8") as out_file:
-            #to_wrt="["
-            #j=0
-            #while j<(len(self.string_labels)-1):
-            #    to_wrt+=j+", "
-            #to_wrt+=self.string_labels[-1] + "]"
             out_file.write(str(self.genome))
             out_file.close()
 
@@ -246,21 +233,11 @@ class Tensegrity:
         """
         self.graph=Graph(self.l_system, self.edge_types, 3)
         self.graph.make_tr3()
-        gnomes=self.graph.find_matching_pairs_recursively()
         self.pairs=[]
         self.struts=[]
-        half=(len(gnomes)//2)
-        for i in range (half):
-            strut=gnomes[i]
-            self.struts.append(Strut(strut[0],strut[1]))
-        #self.struts.append(Strut(gnomes[1],gnomes[4]))
-        #self.struts.append(Strut(gnomes[2],gnomes[5]))
-        #self.pairs.append(3)
-        #self.pairs.append(0)
-        #self.pairs.append(4)
-        #self.pairs.append(1)
-        #self.pairs.append(5)
-        #self.pairs.append(2)
+        self.struts.append(Strut(self.graph.node_list[0],self.graph.node_list[3]))
+        self.struts.append(Strut(self.graph.node_list[1],self.graph.node_list[4]))
+        self.struts.append(Strut(self.graph.node_list[2],self.graph.node_list[5]))
 
     def make_tr4(self):
         """Make a three-bar tensegrity
@@ -280,50 +257,19 @@ class Tensegrity:
         self.struts.append(Strut(nodes[5],nodes[1]))
         self.struts.append(Strut(nodes[6],nodes[2]))
         self.struts.append(Strut(nodes[7],nodes[3]))
-        #self.pairs.append(4)
-        #self.pairs.append(5)
-        #self.pairs.append(6)
-        #self.pairs.append(7)
-        #self.pairs.append(0)
-        #self.pairs.append(1)
-        #self.pairs.append(2)
-        #self.pairs.append(3)
 
-    def make_tr15(self):
-        """Make a fifteen-bar tensegrity
-        """
-        #self.l_system.fscan("tr15.tens")
-        self.graph = Graph(self.l_system,self.edge_types)
-        self.graph.make_tr3()
-        # getchar();
-        #  _ls->print();
-        self.grow(30,0)
-        #hard-code element numbers
-        elnums=[1,2,3,1,4,3,5,2,6,4,7,5,8,6,9,7,10,8,11,9,12,10,13,11,14,12,15,13,15,14]
-        gnomes=self.get_pairs()
-        for g in range(len(gnomes)):
-            #printf("setting %d %d\n",g,elnums[g]);
-            self.graph.get_nodes()[g].set_el_num(elnums[g])
-    
     def make_trx(self,num_bars):
         """Make an x-bar tensegrity
         """
-        #self.l_system.fscan("tr15.tens")
         self.graph = Graph(self.l_system,self.edge_types,num_bars)
         self.graph.make_tr3()
-        self.grow(num_bars*2,0)
-        gnomes=self.get_pairs()
-        # for x in gnomes:
-        #     edge=[]
-        #     for j in x:
-        #         edge.append(j.get_label())
-        #     print (edge)
-        # print (len(gnomes))
-        for i in gnomes:
-            self.struts.append(Strut(i[0],i[1]))
-        # for g in range(len(gnomes)):
-        #     #printf("setting %d %d\n",g,elnums[g]);
-        #     self.graph.get_nodes()[g].set_el_num(elnums[g])
+        grown=self.grow(num_bars*2,0)
+        if grown:
+            gnomes=self.get_pairs()
+            for i in gnomes:
+                self.struts.append(Strut(i[0],i[1]))
+            return True
+        return False
 
     def new_grow(self, size, graph_num):
         """Grows the contained graph using the transformer
@@ -334,10 +280,8 @@ class Tensegrity:
         Returns:
             Graph: the resultant graph after transformation
         """
-        # result = self.graph.grow_while_connecting_rods(size, 1, graph_num, DEF_L_SYSTEM)
-        # result = self.graph.grow_while_connecting_rods(0)
-        result = self.graph.transform(size, 1, graph_num, DEF_L_SYSTEM)
-        # result = self.graph.generate_bracket_edges()
+        result = self.graph.grow_while_connecting_rods(size, 1, graph_num, DEF_L_SYSTEM)
+        self.simplify()
         return result
 
     def simplify(self):
@@ -357,40 +301,38 @@ class Tensegrity:
         Returns:
             Graph: the resultant graph after transformation
         """
-        result  = self.graph.grow_node_by_node_until_size(size)
-        # result  = self.graph.grow_node_by_node_until_size(size,self.l_system)
+        growth  = self.graph.grow_node_by_node_until_size(size)
         tries = 1
-        success = 0
-        if result == -1:
-            success = 0
+        success = False
+        if not growth:
+            if self.graph.order() >= size:
+                success = True
         else:
             # if it is too small or an odd number of nodes
             #keep trying a few more times
             if ((self.graph.order() < size) or (self.graph.order()%2 != 0)):
                 if self.graph.order()>80:
                     self.graph.remove_node(self.graph.get_nodes()[-1])
-                    success=1
+                    success=True
                 else:
                     do=True
                     while do:
-                        self.graph.grow_node_by_node_until_size(size+tries)
-                        # self.graph.grow_node_by_node_until_size(size+tries,self.l_system,print_intermed)
+                        growth=self.graph.grow_node_by_node_until_size(size+tries)
                         tries+=1
                         if ((self.graph.order() < size) or (self.graph.order()%2 != 0)) and (
-                            tries < 10):
+                            tries < 6) or (not growth):
                             do=False
-                    if ((self.graph.order() >= size) and (self.graph.order()%2 == 0)):
-                        success = 1
+                    if self.graph.order() >= size:
+                        success = True
             else:# it is good
-                success = 1
+                success = True
         if success:
-            # self.draw_graph(0)
             self.find_pairs()
         return success
 
-
     def mutate(self):
-        """Mutate a tensegrity"""
+        """Perform a secondary mutation a tensegrity"""
+        self.comment+="\n// Mutated"
         if random.randint(0,2):
             if len(self.genome)==0:
                 self.genome.append(random.random()*2.0)
@@ -414,10 +356,10 @@ class Tensegrity:
         self.pairs=self.graph.find_matching_pairs_recursively()
 
     def prim_mut(self, rate):
-        """_summary_
+        """Mutate the l_system of the tensegrity
 
         Args:
-            rate (_type_): _description_
+            rate (int): mutation rate of the l_system
         """
         for i in self.edge_types:
             if self.binom(rate):
@@ -430,5 +372,25 @@ class Tensegrity:
             return 1
         return 0
 
-    def draw_graph(self, graph_num):
-        self.graph.draw_graph(graph_num)
+    def draw_graph(self, graph_num, def_l, made, num):
+        """Print a unique graph
+
+        Args:
+            graph_num (int): number label for graph
+            def_l (dict): default l_system to compare against to determine uniqueness
+            made (boolean): whether or not the tensegrities graph was successfully grown
+            num (int): number of desired struts
+        """
+        if self.get_l_system().rule_dict!=def_l and len(self.struts)==num and made:
+            self.comment+="\n// Rules:"
+            com_str=""
+            x:Strut
+            for x in self.struts:
+                edge=[]
+                edge.append(x.get_top().get_label())
+                edge.append(x.get_bottom().get_label())
+                com_str+=f"\n// {edge}"
+            com_str+=f"\n// {len(self.struts)}"
+            # print (len(self.struts))
+            self.comment+=f"{com_str}"
+            self.graph.draw_graph(graph_num,self.comment)

@@ -1,17 +1,15 @@
 """Graph class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 6.0
+@version: 7.0
 """
 
 import random
-import networkx as nx
-import networkx.algorithms.approximation as appr
 from l_system import LSystem
 from transformer import Transformer
 from node import Node
 from edge import Edge
-import graphviz  # doctest: +NO_EXE
+import graphviz
 
 
 class Graph:
@@ -19,8 +17,8 @@ class Graph:
 
     def __init__(self, rules, edge_types, bars):
         self.dot = graphviz.Digraph(comment='Tensegrity Object Graph')
-        self.edge_types = edge_types
-        self.rules = rules
+        self.edge_types=edge_types
+        self.rules:LSystem=rules
         self.transformer = Transformer(self)
         self.edge_list = []
         self.protected_nodes=[]
@@ -30,7 +28,7 @@ class Graph:
         self.node_number = 0
         self.mut=False
 
-    def get_rule(self, key:LSystem):
+    def get_rule(self, key):
         """Getter for individual rules in the rule dictionary
 
         Args:
@@ -83,37 +81,6 @@ class Graph:
         """
         return len(self.edge_list)
 
-    def create_graph(self):
-        """Generates a dictionary representing the initial graph to be
-        fed into the transformer and then runs the dictionary (edge_dict)
-        through the transformer however many times is desired.
-        """
-        while self.node_number < 4:
-            self.add_node(None)
-        self.add_edge("A", self.node_list[0], self.node_list[1])
-        self.add_edge("B", self.node_list[1], self.node_list[2])
-        self.add_edge("C", self.node_list[2], self.node_list[3])
-        self.add_edge("D", self.node_list[3], self.node_list[0])
-        self.add_edge("E", self.node_list[1], self.node_list[3])
-
-    def transform(self, size, print_intermed, graph_num, def_l):
-        """Passes the graph through the transformer a number of times
-
-        Args:
-            num_trans (int): the desired number of passes through
-            the transformer
-        """
-        transformations = 0
-        marg=.25
-        while transformations < (size):
-            self.transformer.transform()
-            if print_intermed and self.rules.rule_dict!=def_l:
-                self.draw_graph(graph_num+marg)
-            marg+=.25
-            transformations += 1
-        self.generate_bracket_edges()
-
-
     def swap_rule(self, key, new_rule):
         """Changes the definition of the rule at the indicated key
 
@@ -143,25 +110,28 @@ class Graph:
             self.bracket_nodes.append(node)
         return node
 
-    def add_edge(self, label, start, end):
+    def add_edge(self, label, start:Node, end:Node):
         """Creates and adds a new edge to the graph
 
         Args:
-            label (string): _description_
+            label (string): label for the edge
             start (Node): the origin node of the edge
             end (Node): the destination node for the edge
         """
-        edge = Edge(label, start, end)
-        self.edge_list.append(edge)
-        if start is not None:
-            start.add_edge(end)
-        if end is not None:
-            end.add_edge(start)
+        if start is not None or end is not None:
+            edge = Edge(label, start, end)
+            self.edge_list.append(edge)
+            if start is not None:
+                start.add_edge(end)
+            if end is not None:
+                end.add_edge(start)
 
     def generate_bracket_edges(self):
         """Creates new connecting edges between
             nodes with matching bracket types
         """
+        node1:Node
+        node2:Node
         for node1 in self.bracket_nodes:
             for node2 in self.bracket_nodes:
                 if node1 != node2 and self.bracket_nodes.index(
@@ -187,7 +157,7 @@ class Graph:
         """
         return node1.is_adjacent(node2)
 
-    def neighbors(self, node1):
+    def neighbors(self, node1:Node):
         """Return a list of all nodes adjacent to node1.
 
         Args:
@@ -206,31 +176,18 @@ class Graph:
             node1 (Node): The node that is being removed
         """
         if node1 not in self.protected_nodes:
-            adj=node1.get_adjacent()
-            for node2 in adj:
-                self.remove_edge1(node1,node2)
+            edge:Edge
+            for edge in self.edge_list:
+                if edge.contains(node1):
+                    if edge.get_end()==node1 and edge.get_start() in self.protected_nodes:
+                        self.reassign_edge(edge,-1)
+                    elif edge.get_start()==node1 and edge.get_end() in self.protected_nodes:
+                        self.reassign_edge(edge,1)
+                    else:
+                        self.remove_edge(edge)
             self.node_list.remove(node1)
 
-    def remove_edge1(self, start_node, end_node):
-        """Removes an edge from the graph
-
-        Args:
-            start_node (Node): The starting node of the desired edge
-            end_node (Node): The end node of the desired edge
-
-        Returns:
-            boolean: True if the edge was deleted and false if not
-        """
-        for edge in self.edge_list:
-            if (edge.contains(start_node) or start_node is None) and (edge.contains(end_node) or end_node is None):
-                self.edge_list.remove(edge)
-                if start_node is not None and end_node is not None:
-                    start_node.remove_edge(end_node)
-                    end_node.remove_edge(start_node)
-                return True
-        return False
-
-    def remove_edge2(self, edge:Edge):
+    def remove_edge(self, edge:Edge):
         """Removes an edge from the graph
 
         Args:
@@ -241,30 +198,41 @@ class Graph:
             boolean: True if the edge was deleted and false if not
         """
         self.edge_list.remove(edge)
-        edge.get_start().remove_edge(edge.get_end())
-        edge.get_end().remove_edge(edge.get_start())
+        if edge.get_start() is not None:
+            edge.get_start().remove_edge(edge.get_end())
+        if edge.get_end() is not None:
+            edge.get_end().remove_edge(edge.get_start())
 
-    def reassign_edge(self, edge:Edge, new_node:Node, side):
-        if side>0:
-            if not self.adjacent(new_node,edge.get_end()):
-                edge.get_end().remove_edge(edge.get_start())
+    def reassign_edge(self, edge:Edge, side):
+        """Reassign one end of an edge to a new strut endpoint
+        
+        Args:
+            edge (Edge): edge being changed
+            side (int): which end of the edge is being reassigned
+        """
+        x=0
+        adj=True
+        new_node=self.smallest_node()
+        endpoint=edge.get_endpoint(-side)
+        other_end=edge.get_endpoint(side)
+        while adj:
+            if x>len(endpoint.get_adjacent()):
+                adj=False
+                self.remove_edge(edge)
+            elif self.adjacent(new_node,endpoint) or new_node==endpoint or new_node==endpoint.get_other():
+                new_node=random.choice(self.protected_nodes)
+                x+=1
+            else:
+                adj=False
+                endpoint.remove_edge(other_end)
                 edge.set_start(new_node)
-                new_node.add_edge(edge.get_end())
-                edge.get_end().add_edge(new_node)
-            else:
-                self.remove_edge2(edge)
-        elif side<0:
-            if not self.adjacent(new_node,edge.get_start()):
-                edge.get_start().remove_edge(edge.get_end())
-                edge.set_end(new_node)
-                new_node.add_edge(edge.get_start())
-                edge.get_start().add_edge(new_node)
-            else:
-                self.remove_edge2(edge)
+                new_node.add_edge(endpoint)
+                endpoint.add_edge(new_node)
 
     def clear_nodes(self):
         """Resets the degree of all nodes in the graph.
         """
+        node:Node
         for node in self.node_list:
             node.clear_deg()
 
@@ -279,6 +247,7 @@ class Graph:
             Edge: the edge in the graph containing both of the specified nodes.
             If not found, returns None
         """
+        i:Edge
         for i in self.edge_list:
             if i.contains(node1) and i.contains(node2):
                 return i
@@ -322,7 +291,6 @@ class Graph:
         self.add_edge('1', self.node_list[3], self.node_list[5])
 
     def grow_while_connecting_rods(self, size, print_intermed, graph_num, def_l):
-        #(self, size, print_intermed)
         """Grows an initial graph using the indicated l_system and size parameters
 
         Args:
@@ -333,50 +301,47 @@ class Graph:
         Returns:
             boolean: boolean indicating whether or not the graph is growing
         """
-        growing = 1
-
+        growing = True
         print("growing...")
         oldnodes = self.order()
         oldedges = self.size()
-        self.transform(size,graph_num,print_intermed,def_l)
+        transformations = 0
+        # marg=.25
+        #run graph through transformer he indicated number of times
+        while transformations < (size):
+            self.transformer.transform()
+            # if print_intermed and self.rules.rule_dict!=def_l:
+            #     # self.draw_graph(graph_num+marg)
+            # marg+=.25
+            transformations += 1
         self.generate_bracket_edges()
         curnodes = self.order()
         curedges = self.size()
         if (oldnodes == curnodes and oldedges == curedges):
-            growing = 0
-
+            growing = False
         return growing
 
     def simplify_graph(self):
-        """Removes all nodes that have less than 3 edges
-        beginning and ending at its location.
         """
-
-        ####    SEE IF THIS CAN BE IMPROVED!!!!!   ####
-
-        loop = True
-        while loop and len(self.node_list) != 0:
-            goodbye_edges = []
-            goodbye_nodes = []
-            loop = False
+        Removes all nodes that have less than 3 edges
+        beginning and ending at its location."""
+        loop=True
+        #loop indefinitely or until graph is empty
+        while loop and self.order()!=0:
+            n_to_del=[]
+            loop=False
+            node:Node
             for node in self.node_list:
-                if node.is_extraneous() and node not in self.protected_nodes:
-                    loop = True
-                    goodbye_nodes.append(node)
-                    for edge in self.edge_list:
-                        if edge.contains(node) and goodbye_edges.count(
-                                edge) == 0:
-                            goodbye_edges.append(edge)
-            edge:Edge
-            for edge in self.edge_list:
-                if edge.get_start() is None or edge.get_end() is None:
-                    if edge in goodbye_edges:
-                        goodbye_edges.remove(edge)
-                    self.remove_edge1(edge.get_start(), edge.get_end())
-            for i in goodbye_nodes:
-                self.remove_node(i)
-            for i in goodbye_edges:
-                self.remove_edge1(i.get_start(), i.get_end())
+                #remove unprotected nodes with a degree less than 3
+                if node not in self.protected_nodes and node.is_extraneous():
+                    loop=True
+                    n_to_del.append(node)
+            for i in n_to_del:
+                if self.order()>self.bar_num*2:
+                    self.remove_node(i)
+            #break loop if less than the requisite number of nodes for an x-bar structure
+            if self.order()<=self.bar_num*2:
+                loop=False
 
     def find_random_string_labels(self):
         """Reassigns the lables of strings in the graph
@@ -392,18 +357,15 @@ class Graph:
             stay_in = True
             for e in edges:
                 if e.get_label() == node.get_label():
-                    # rand_edge.change_label("-1")
                     i=random.randint(-1, (len(self.edge_types) - 1))
                     e.change_label(self.edge_types[i])
                     self.mut=True
-
             tries = 0
             while stay_in and tries <= 5 * len(edges):
                 tries += 1
                 rand_ex = random.randint(0, (len(edges) - 1))
                 rand_edge = edges[rand_ex]
                 if int(rand_edge.get_label() == "-1"):
-                    # rand_edge.change_label("-1")
                     i=random.randint(0, (len(self.edge_types) - 1))
                     rand_edge.change_label(self.edge_types[i])
                     self.mut=True
@@ -451,7 +413,8 @@ class Graph:
         """
         nodes = self.node_list
         all_pairs = []
-        for i,inode in enumerate(nodes):
+        #get a non-adjacency matrix of all nodes in graph
+        for inode in nodes:
             my_matches = []
             for jnode in nodes:
                 if inode!=jnode:
@@ -465,41 +428,66 @@ class Graph:
                 f"uh oh! different allPairs ({len(all_pairs)}) than nodes ({len(nodes)})!"
             )
         found_matches = self.recurse_find_pairs(0, all_pairs, found_matches)
-        for i in found_matches:
-            for j in i:
-                self.protected_nodes.append(j)
+        found_matches.reverse()
+        self.protect(found_matches)
         self.purify_graph(found_matches)
+        self.simplify_graph()
         return found_matches
 
-    def purify_graph(self,found):
+    def protect(self, found_matches):
+        """Identifies endpoints of struts to protect 
+        them from being deleted in simplification
+
+        Args:
+            found_matches (list): list of strut endpoints
+        """
+        i=0
+        while i<self.bar_num and i<len(found_matches):
+            match=found_matches[i]
+            for j in match:
+                self.protected_nodes.append(j)
+            i+=1
+
+    def purify_graph(self,found:list):
+        """Removes all nodes that are not included in a final strut
+
+        Args:
+            found (list): list of all potential strut endpoints
+        """
+        #remove all unprotected nodes
         i=0
         while i<len(self.node_list):
-            # if not self.node_list[i].is_matched():
             if self.node_list[i] not in self.protected_nodes:
                 self.remove_node(self.node_list[i])
             else:
                 i+=1
+        #remove or reassign all edges that had endpoints removed in previous loop
         i=0
-        self.smallest_node()
         while i<len(self.edge_list):
             edge:Edge=self.edge_list[i]
             if (edge.get_end() not in self.node_list) and (edge.get_start() not in self.node_list):
-                    self.remove_edge1(edge.get_start(),edge.get_end())
-            elif (edge.get_end() not in self.node_list):
-                    self.reassign_edge(edge, self.smallest_node(),-1)
-            elif (edge.get_start() not in self.node_list):
-                    self.reassign_edge(edge, self.smallest_node(),1)
+                self.remove_edge(edge)
+            elif edge.get_end() not in self.node_list:
+                self.reassign_edge(edge,-1)
+            elif edge.get_start() not in self.node_list:
+                self.reassign_edge(edge,1)
             else:
                 i+=1
+        #remove extraneous struts and their endpoints
         while len(found)>self.bar_num:
             popped=found.pop()
             for x in popped:
-                self.remove_node(x)
-                self.simplify_graph()
-        self.smallest_node()
+                if x in self.node_list and x not in self.protected_nodes:
+                    self.remove_node(x)
+                    self.simplify_graph()
 
     def smallest_node(self):
-        nodes=self.node_list
+        """Get the strut endpoint with the least edges on it
+
+        Returns:
+            Node: least connected strut endpoint in graph
+        """
+        nodes=self.protected_nodes
         n = len(nodes)
         for i in range(n - 1):
             min_idx = i
@@ -507,8 +495,6 @@ class Graph:
                 if nodes[j].get_degree() < nodes[min_idx].get_degree():
                     min_idx = j
         return nodes[min_idx]
-
-
 
     def recurse_find_pairs(self, curindex:int, all_pairs:list, matches:list):
         """Find pairs of nodes with matching bracket labels
@@ -524,23 +510,33 @@ class Graph:
         nodes=self.node_list
         if curindex==len(all_pairs):
             return matches
-        else:
-            my_pairs:list=all_pairs[curindex]
-            temp_matches=[]
-            for j in matches:
-                temp_matches.append(j)
-            i:Node
-            # my_pairs.reverse()
-            for i in my_pairs:
-                if not nodes[curindex].is_matched():
-                    match=i
-                    if not match.is_matched():
-                        match.matched=True
-                        nodes[curindex].matched=True
-                        temp_matches.append((match, nodes[curindex]))
-                        found_matches=self.recurse_find_pairs(curindex+1,all_pairs,temp_matches)
-                        return found_matches
-            return self.recurse_find_pairs(curindex+1,all_pairs,temp_matches)
+        my_pairs:list=all_pairs[curindex]
+        my_pairs.reverse()
+        temp_matches=[]
+        for j in matches:
+            temp_matches.append(j)
+        i:Node
+        #iterate through potential matches
+        i=0
+        while nodes[curindex].get_other() is None and i<len(my_pairs):
+            match:Node=my_pairs[i]
+            #if the potential match is so far unmatched
+            #OR it is the last potential match
+            if match.get_other() is None or match==my_pairs[-1]:
+                old=match.get_other()
+                match.set_other(nodes[curindex])
+                nodes[curindex].set_other(match)
+                #if match was previously paired, unpair it
+                if old is not None:
+                    if (old,match) in temp_matches:
+                        temp_matches.remove((old,match))
+                    else:
+                        temp_matches.remove((match,old))
+                temp_matches.append((match, nodes[curindex]))
+                found_matches=self.recurse_find_pairs(curindex+1,all_pairs,temp_matches)
+                return found_matches
+            i+=1
+        return self.recurse_find_pairs(curindex+1,all_pairs,temp_matches)
 
     def grow_node_by_node_until_size(self, size):
         """Grows graph until the graph is
@@ -554,23 +550,44 @@ class Graph:
         """
         notgrowing = 0
         iters = 0
-        stay = True
+        stay = (self.number_of_good_nodes()<size) or (self.order()<80)
+        oldnodes = self.order()
+        oldedges = self.size()
+        #loop indefinitely
         while stay:
-            oldnodes = self.order()
-            oldedges = self.size()
-            self.transformer.transform()
+        # while stay:
+            num_edge=self.size()
+            edges:list=self.edge_list
+            r=1
+            #iterate through rules
+            while r<len(self.edge_types) and stay:
+                i=0
+                num_edge = self.size()
+                rule=self.rules.get_rule(r)
+                #iterate thru edges
+                while i<num_edge and stay:
+                    #if edge type matches
+                    if edges[i].get_label()==r:
+                        #apply rule
+                        self.transformer.apply_rule(edges[i],rule)
+                        self.remove_edge(edges[i])
+                    #terminate if
+                    if (self.number_of_good_nodes()>=size) or (self.order()>=80) or iters>=100:
+                        stay=False
+                    i+=1
+                r+=1
             curnodes = self.order()
             curedges = self.size()
             if (oldnodes == curnodes and oldedges == curedges):
-                notgrowing = 1
+                notgrowing = True
+            #connect stubs
+            self.generate_bracket_edges()
             iters += 1
-            if (self.number_of_good_nodes()
-                    >= size) or (notgrowing == 1) or (self.order() >= 80):
-                stay = False
-        self.generate_bracket_edges()
+        #remove extraneous nodes
         self.simplify_graph()
         if notgrowing:
-            return -1
+            return False
+        return True
 
     def number_of_good_nodes(self):
         """Find how many nodes have a degree of three or more
@@ -584,85 +601,22 @@ class Graph:
                 count += 1
         return count
 
-        #here we're trying to find pairs of nodes to turn into elements
-
-    def match_nodes(self):
-        """Matches nodes with other nodes with a similar bracket label
-        """
-        unhappy = []
-        unmatched = []
-        now_unmatched = []
-        tries = 0
-        unmatched_are_the_same = 1
-        stay = True
-        while stay:
-            print("matching nodes..")
-            tries += 1
-            for i in range(self.order()):
-                if self.node_list[i].get_other is None:
-                    unmatched.append(self.node_list[i])
-                if self.node_list[i].happy() == 0:
-                    unhappy.append(self.node_list[i])
-            #search through unhappy nodes
-            for n in unhappy:
-                # only want to match 3-connected nodes
-                # which are "unhappy"
-                if ((n.get_degree() >= 3) and (n.get_other() is None)):
-                    found = 0
-                    #first see if you have a perfect match
-                    for j in unhappy:
-                        if ((i != j) and (n.get_bracket() == j.get_bracket())
-                                and not (self.adjacent(n, j))
-                                and (n.get_other() is None) and
-                            (j.happy() == 0)):  #just unhappy, not necc empty
-                            print("a perfect match")
-                            n.set_other(j)
-                            j.set_other(n)
-                            found = True
-                            break
-                        if found:
-                            break
-            #otherwise find an imperfect match
-                    if not found:
-                        for j in unhappy:
-                            if ((i != j) and (n.get_other() is None)
-                                    and (j.get_other() is None)):
-                                if not self.adjacent(i, j):
-                                    print("an imperfect match")
-                                    n.set_other(j)
-                                    j.set_other(n)
-            now_unmatched = []
-            for i in self.node_list:
-                if i.get_other is None:
-                    now_unmatched.append(i)
-            if len(unmatched) == len(now_unmatched):
-                unmatched_are_the_same = 1
-                for i in (enumerate(unmatched)):
-                    if unmatched[i] != now_unmatched[i]:
-                        unmatched_are_the_same = 0
-                        break
-            else:
-                unmatched_are_the_same = 0
-            if len(now_unmatched) != 0 and (unmatched_are_the_same
-                                            == 0) and (tries < 5):
-                stay = False
-
-    def draw_graph(self,graph_name_num):
+    def draw_graph(self,graph_name_num,comment):
         """Reads through the node_list and edge_list and generates nodes
         and edges respectively using the information contained within
         the node and edge objects.
         """
         self.dot.clear()
-        self.dot.comment=f'{self.rules}'
-        # self.dot = graphviz.Digraph(comment='Tensegrity Object Graph')        i:Node
-        for i in self.node_list:
-            if i!=[]:
-                self.dot.node(i.get_label())
+        self.dot.comment=comment
+        n:Node
+        for n in self.node_list:
+            self.dot.node(n.get_label())
         i:Edge
         for i in self.edge_list:
-            self.dot.edge(str(i.get_start_label()),str(i.get_end_label()),str(i.get_label()))
+            if i.get_start_label()!="NONE" and i.get_end_label()!="NONE":
+                self.dot.edge(str(i.get_start_label()),str(i.get_end_label()),str(i.get_label()))
         try:
             self.dot.render(f'doctest-output/graph_num_{graph_name_num}.gv').replace('\\', '/')
         except graphviz.backend.execute.ExecutableNotFound:
             print(f"Graph {graph_name_num} Made")
-            # print(self.rules)
+            

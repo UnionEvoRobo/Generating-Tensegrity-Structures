@@ -1,7 +1,7 @@
 """L-System class for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 2.0
+@version: 3.0
 """
 
 import random
@@ -12,7 +12,6 @@ TERMS=[1,2,3,4,5,-1]
 
 class LSystem:
     """L-System class for the generation of complex tensegrity structures."""
-
 
     def __init__(self, rules):
         self.rule_dict=rules
@@ -28,25 +27,25 @@ class LSystem:
             if not out_file:
                 print(f"cannot open file {file_name} for input")
                 return
-            else:
-                for result in out_file:
-                    if result!=EOFError:
-                        result=result.split(" ")
-                        rule_num=result[0]
-                        rhs=result[1].split('[')
-                        rhs=rhs[1].split(',')
-                        rhs[2]=rhs[2].split(']')[0]
-                        #r_type=result[2].split('(')[1]
-                        #spin=result[3].split(')')[0]
-                        self.rule_dict[rule_num]=f"{rule_num}>{rhs[0]}"+"{"+rhs[1]+"}"+rhs[2]
-            #printf("I read: %d [%d,%d,%d] (%d,%d);%s\n",rulenum,rhs[0],rhs[1],rhs[2],type,spin);
-            # newrule->print();
-            #      getchar();
-        #  printf("read %d items\n",result);
-        #  getchar();
+            for result in out_file:
+                if result!=EOFError:
+                    result=result.split(" ")
+                    rule_num=result[0]
+                    rhs=result[1].split('[')
+                    rhs=rhs[1].split(',')
+                    rhs[2]=rhs[2].split(']')[0]
+                    self.rule_dict[rule_num]=f"{rule_num}>{rhs[0]}"+"{"+rhs[1]+"}"+rhs[2]
         out_file.close()
 
     def get_rule(self, key):
+        """Getter for a single rule from the l_system
+
+        Args:
+            key (int): the key of the desired rule
+
+        Returns:
+            set: the rule associated with the given key
+        """
         rule=[]
         for i in self.rule_dict[key]:
             rule.append(i)
@@ -54,13 +53,19 @@ class LSystem:
         # return self.rule_dict[key]
 
     def set_rule(self, key, rule):
+        "Set the definition of a rule"
         self.rule_dict[key]=rule
 
     def new_rule(self, key):
+        """Generate a new randomized rule
+
+        Args:
+            key (int): the key for the rule being changed
+        """
         rule=self.get_rule(key)
         rule[0]=random.choice(TERMS)
         rule[1]=random.choice(TERMS)
-        rule[2]=-1
+        rule[2]=random.choice(TERMS)
 
         #prevent creation of an empty rule
         if (rule[0]==-1 and rule[1]==-1) or (rule[1]!=-1):
@@ -73,18 +78,11 @@ class LSystem:
     def __str__(self):
         to_ret=[]
         for i in self.rule_dict:
-            rule=self.rule_dict[i]
-            if rule[0]==-1 and rule[2]==-1:
-                to_ret.append("BAAADD")
-            elif rule[0]!=-1 and rule[2]!=-1 and rule[1]==-1:
-                to_ret.append("BAAAD")
-            elif rule[0]==-1 and rule[2]==-1 and rule[1]==-1:
-                to_ret.append("BAAAD")
-            else:
-                to_ret.append(self.rule_dict[i])
+            to_ret.append(self.rule_dict[i])
         return str(to_ret)
 
     def size(self):
+        "Get the number of rules"
         return len(self.rule_dict)
 
     def int_rand_in_range(self, num_range):

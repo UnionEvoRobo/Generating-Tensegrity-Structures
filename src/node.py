@@ -1,7 +1,7 @@
 """Node module for the generation of complex tensegrity structures.
 
 @author: Daniel Casper
-@version: 4.0
+@version: 5.0
 """
 
 class Node:
@@ -11,7 +11,7 @@ class Node:
         self.label=str(label)
         self.bracket=""
         self.adjacent=[]
-        self.matched=False
+        self.pair:Node=None
         self.el_num=None
         self.other=None
 
@@ -22,8 +22,7 @@ class Node:
             new_label (string): Intended new label string
         """
         self.label=new_label
-    def set_el_num(self,new_num):
-        self.el_num=new_num
+
     def get_label(self):
         """Return the label string.
 
@@ -68,7 +67,9 @@ class Node:
     def remove_edge(self, node):
         """Decrements the degree of the node property by 1
         """
-        self.adjacent.remove(node)
+        if node in self.adjacent:
+            self.adjacent.remove(node)
+
     def is_extraneous(self):
         """Indicates whether or not a node has the desired three edges.
 
@@ -87,6 +88,7 @@ class Node:
             boolean: True if the nodes are adjacent and false if not
         """
         return node in self.adjacent
+
     def clear_deg(self):
         """Sets the degree of the node back to 0
         """
@@ -98,12 +100,11 @@ class Node:
         Returns:
             node: the current nodes linked pair
         """
-        return self.other
+        return self.pair
 
     def unset_other(self):
         """Sets a node's linked pair to None"""
-        print("Unsetting other")
-        self.other=None
+        self.pair=None
 
     def set_other(self, other):
         """Set a node's linked pair to an indicated other node
@@ -111,31 +112,7 @@ class Node:
         Args:
             other (node): the node to be set as the linked pair
         """
-        amhappy = self.happy()
-
-
-        if self.other:
-            self.other.unset_other()
-
-        self.other = other
-
-        if amhappy > self.happy():
-            print("Node::you made me unhappy!")
-
-
-    def happy(self):
-        """Find if a node is happy
-
-        Returns:
-            boolean: indicates whether a node is happy
-        """
-        if not self.other:
-            return False
-        elif self.get_bracket()!=self.bracket:
-            return False
-        else:
-            return True
+        if self.pair is not None:
+            self.pair.unset_other()
+        self.pair=other
         
-        
-    def is_matched(self):
-        return self.matched
