@@ -30,6 +30,7 @@ class Node:
             string: string indicating the node number
         """
         return str(self.label)
+
     def get_adjacent(self):
         """Return a list of all adjacent nodes.
 
@@ -37,6 +38,7 @@ class Node:
             list: list of all adjacent nodes
         """
         return self.adjacent
+
     def set_bracket(self, bracket_type):
         """Set the bracket field type.
 
@@ -44,6 +46,7 @@ class Node:
             bracket_type (string): bracket type indicated by a rule
         """
         self.bracket=bracket_type
+
     def get_bracket(self):
         """Return the bracket string
 
@@ -51,6 +54,7 @@ class Node:
             self.bracket(string): string indicating the bracket type
         """
         return self.bracket
+
     def get_degree(self):
         """Getter for the degree (number of adjacent nodes) of the node
 
@@ -58,6 +62,7 @@ class Node:
             int: Degree of the node
         """
         return len(self.adjacent)
+
     def add_edge(self, node):
         """Increments the degree of the node property by 1
         """
@@ -78,6 +83,7 @@ class Node:
             greater than or equal to three. Otherwise returns false.
         """
         return self.get_degree()<3
+
     def is_adjacent(self, node):
         """Determines whether another node is adjacent to current node
 
