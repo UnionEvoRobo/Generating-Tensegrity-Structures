@@ -52,7 +52,7 @@ class Evaluator:
             for i in self.strings:
                 endpoints.append(int(i.get_from().get_label()))
                 endpoints.append(int(i.get_to().get_label()))
-            #self.black_box(len(rods),endpoints)
+            #self.black_box(tens.get_struts(),endpoints)
             #self.run_tensegrity(stop_on_flag,render)
             #dt=self.distance_traveled(self.curr_com)
             #print(f"distance: {dt}")
@@ -65,7 +65,7 @@ class Evaluator:
             results.append(0)
         return results
 
-    def black_box(self, num_struts, string_ends):
+    def black_box(self, struts, string_ends):
         """Interfaces with the form finding function
         Args:
             struts (int): number of struts in the proposed tensegrity
@@ -79,8 +79,13 @@ class Evaluator:
         nargout_num=2
         #presuming blackbox expects g to be an array of ints, num_struts is an int, and tk is tbd
         returnvals=self.eng.blackBox(matlab.int32(string_ends),
-                                        matlab.int32(num_struts),nargout=nargout_num)
-        #print(returnvals)
+                                        matlab.int32(len(struts)),nargout=nargout_num)
+        print(returnvals)
+        i:Strut
+        x=[]
+        for i in struts:
+            x.append((i.get_top().get_label(),i.get_bottom().get_label()))
+        print(x)
         x=returnvals[0][0]
         string_list=[]
         for i in x:
@@ -168,5 +173,5 @@ class Evaluator:
         t_graph=tens.get_graph()
         graph_edges=t_graph.get_edges()
         s:TensString
-        for s in self.strings:
-            s.set_rod_number(int(graph_edges[self.strings.index(s)].get_label()))
+        for i,s in enumerate(self.strings):
+            s.set_rod_number(int(graph_edges[i].get_label()))

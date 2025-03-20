@@ -16,7 +16,7 @@ class Graph:
     """Graph class for the generation of complex tensegrity structures."""
 
     def __init__(self, rules, edge_types, bars):
-        self.dot = graphviz.Digraph(comment='Tensegrity Object Graph')
+        self.dot = graphviz.Graph(comment='Tensegrity Object Graph')
         self.edge_types=edge_types
         self.rules:LSystem=rules
         self.transformer = Transformer(self)
@@ -140,9 +140,11 @@ class Graph:
                             ) == node2.get_bracket():
                     edge = Edge(node1.get_bracket(), node1, node2)
                     if edge.is_unique(self.edge_list):
-                        self.edge_list.append(edge)
-                        node1.add_edge(node2)
-                        node2.add_edge(node1)
+                        self.add_edge(node1.get_bracket(),node1,node2)
+#
+#                        self.edge_list.append(edge)
+#                        node1.add_edge(node2)
+#                        node2.add_edge(node1)
 
     def adjacent(self, node1:Node, node2:Node):
         """Determines whether two nodes in the graph have an
@@ -212,20 +214,23 @@ class Graph:
         """
         x=0
         adj=True
-        new_node=self.smallest_node()
-        endpoint=edge.get_endpoint(-side)
+        endpoint:Node=edge.get_endpoint(-side)
+        avail=self.smallest_node(list(set(self.protected_nodes) - set(endpoint.get_adjacent())))
+        new_node:Node=avail[0]
         other_end=edge.get_endpoint(side)
         while adj:
-            if x>len(endpoint.get_adjacent()):
+            if x>=len(avail):
                 adj=False
                 self.remove_edge(edge)
             elif self.adjacent(new_node,endpoint) or new_node==endpoint or new_node==endpoint.get_other():
-                new_node=random.choice(self.protected_nodes)
                 x+=1
+                if x!=len(avail):
+                    new_node:Node=avail[x]
             else:
                 adj=False
                 endpoint.remove_edge(other_end)
-                edge.set_start(new_node)
+                edge.set_endpoint(new_node,side)
+                # edge.set_start(new_node)
                 new_node.add_edge(endpoint)
                 endpoint.add_edge(new_node)
 
@@ -481,20 +486,24 @@ class Graph:
                     self.remove_node(x)
                     self.simplify_graph()
 
-    def smallest_node(self):
+    def smallest_node(self, nodes:list):
         """Get the strut endpoint with the least edges on it
 
         Returns:
             Node: least connected strut endpoint in graph
         """
-        nodes=self.protected_nodes
+        # nodes=self.protected_nodes
         n = len(nodes)
-        for i in range(n - 1):
+        nodes.sort()
+        for i in range(n):
             min_idx = i
             for j in range(i + 1, n):
+                # select the minimum element in every iteration
                 if nodes[j].get_degree() < nodes[min_idx].get_degree():
                     min_idx = j
-        return nodes[min_idx]
+            # swapping the elements to sort the nodes
+            (nodes[i], nodes[min_idx]) = (nodes[min_idx], nodes[i])
+        return nodes
 
     def recurse_find_pairs(self, curindex:int, all_pairs:list, matches:list):
         """Find pairs of nodes with matching bracket labels
@@ -515,7 +524,6 @@ class Graph:
         temp_matches=[]
         for j in matches:
             temp_matches.append(j)
-        i:Node
         #iterate through potential matches
         i=0
         while nodes[curindex].get_other() is None and i<len(my_pairs):
@@ -524,6 +532,7 @@ class Graph:
             #OR it is the last potential match
             if match.get_other() is None or match==my_pairs[-1]:
                 old=match.get_other()
+                match.unpair()
                 match.set_other(nodes[curindex])
                 nodes[curindex].set_other(match)
                 #if match was previously paired, unpair it
@@ -570,7 +579,7 @@ class Graph:
                     if edges[i].get_label()==r:
                         #apply rule
                         self.transformer.apply_rule(edges[i],rule)
-                        self.remove_edge(edges[i])
+                        # self.remove_edge(edges[i])
                     #terminate if
                     if (self.number_of_good_nodes()>=size) or (self.order()>=80) or iters>=100:
                         stay=False
@@ -582,6 +591,8 @@ class Graph:
                 notgrowing = True
             #connect stubs
             self.generate_bracket_edges()
+            # if self.number_of_good_nodes()>=size:
+            #     stay=False
             iters += 1
         #remove extraneous nodes
         self.simplify_graph()
@@ -601,7 +612,7 @@ class Graph:
                 count += 1
         return count
 
-    def draw_graph(self,graph_name_num,comment):
+    def draw_graph(self,graph_name_num,comment,struts):
         """Reads through the node_list and edge_list and generates nodes
         and edges respectively using the information contained within
         the node and edge objects.
@@ -611,6 +622,9 @@ class Graph:
         n:Node
         for n in self.node_list:
             self.dot.node(n.get_label())
+        for i in struts:
+            self.dot.edge(str(i.get_top_label()),str(i.get_bottom().get_label()),style="dashed")
+            self.dot.edge(str(i.get_top_label()),str(i.get_bottom().get_label()),style="dashed")
         i:Edge
         for i in self.edge_list:
             if i.get_start_label()!="NONE" and i.get_end_label()!="NONE":

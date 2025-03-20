@@ -69,7 +69,19 @@ class Edge:
         if side>0:
             return self.start
         return self.end
+    
+    def set_endpoint(self, new_node, side):
+        """Return the start or end of the edge
 
+        Args:
+            side (int): 1 if getting start, -1 if getting end
+
+        Returns:
+            Node: the start or end node of the edge
+        """
+        if side>0:
+            return self.set_start(new_node)
+        return self.set_end(new_node)
 
     def get_start_label(self):
         """Return the start node's label.

@@ -13,11 +13,10 @@ DEF_L_SYSTEM={1:[2,1,5],2:[4,1,1],3:[4,-1,-1],4:[3,4,4],5:[3,-1,-1]}
 MAX_GRAPH_SIZE=4
 BO_PR=False
 MAX_INT=2147483647
-# EDGES=["1","2","3","4","5"]
 EDGES=[1,2,3,4,5]
-MAX_GENS=5
+MAX_GENS=20
 NUM_BAR=10
-INIT_POP_SIZE= 20
+INIT_POP_SIZE= 10
 X_OVER_RATE = 60
 LS_MUT_RATE=60
 MUT_RATE = 2
@@ -158,8 +157,8 @@ class Algorithm:
                     if self.num_bar>=5:
                         made1=as1.make_trx(self.num_bar)
                         made2=as2.make_trx(self.num_bar)
-                        as1.mutate()
-                        as2.mutate()
+                    as1.mutate()
+                    as2.mutate()
             #if as1 and as2 hasnt been added to the population, evaluate and add it
             num_added=self.eval_add(as1, num_added, made1)
             num_added=self.eval_add(as2, num_added, made2)
@@ -179,12 +178,13 @@ class Algorithm:
         if not self.is_in_pop(tens):
             if tens.get_graph() is None:
                 made=tens.make_trx(self.num_bar)
-            self.evaluate_member(tens) #don't grow!
+            result=self.evaluate_member(tens) #don't grow!
             self.pop.append(tens)
             add+=1
             if self.num_bar<5:
                 tens.new_grow(self.num_trans, self.graph_num)
-            tens.draw_graph(self.graph_num, DEF_L_SYSTEM, made, self.num_bar)
+            if result[self.fitness_index]!=0:
+                tens.draw_graph(self.graph_num, DEF_L_SYSTEM, made, self.num_bar)
             self.graph_num+=1
         return add
 
@@ -231,6 +231,7 @@ class Algorithm:
         """Evaluate an individual member of the population"""
         result = self.world.evaluate(member)
         member.set_objectives(result)
+        return result
 
     def evaluate_pop(self):
         """Evaluate the current population
@@ -491,9 +492,11 @@ if __name__=='__main__':
     if NUM_BAR==3:
         tens_seed.make_tr3()
         tens_seed.new_grow(NUM_TRANS, 0)
-    if NUM_BAR==4:
+        MADE=True
+    elif NUM_BAR==4:
         tens_seed.make_tr4()
         tens_seed.new_grow(NUM_TRANS, 0)
+        MADE=True
     else:
         MADE=tens_seed.make_trx(NUM_BAR)
     if MADE:

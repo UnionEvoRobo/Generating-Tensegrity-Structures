@@ -63,6 +63,7 @@ class Transformer:
             rule (set): the rule being applied
         """
         new_node=self.graph.add_node(rule[1])
+        self.graph.remove_edge(self.act_edge)
         self.graph.add_edge(rule[0],self.act_edge.get_start(),new_node)
         self.graph.add_edge(rule[-1],self.graph.node_list[-1],self.act_edge.get_end())
 
@@ -72,10 +73,14 @@ class Transformer:
         Args:
             rule (set): the rule being applied
         """
+        self.graph.remove_edge(self.act_edge)
+        self.graph.edge_list.append(self.act_edge)
         if rule[0]==-1:
-            self.graph.add_edge(rule[-1], self.act_edge.get_start(), self.act_edge.get_end())
+            self.act_edge.change_label(rule[-1])
+            # self.graph.add_edge(rule[-1], self.act_edge.get_start(), self.act_edge.get_end())
         else:
-            self.graph.add_edge(rule[0], self.act_edge.get_start(), self.act_edge.get_end())
+            self.act_edge.change_label(rule[0])
+            # self.graph.add_edge(rule[0], self.act_edge.get_start(), self.act_edge.get_end())
 
     def pre_branch(self, rule):
         """Executes a pre-branch stub rule
@@ -83,7 +88,8 @@ class Transformer:
         Args:
             rule (set): the rule being applied
         """
-        self.graph.add_edge(rule[1],None,self.act_edge.get_start())
+        self.act_edge.get_start().set_bracket(rule[1])
+        # self.graph.add_edge(rule[1],None,self.act_edge.get_start())
         self.relabel([rule[-1],-1,-1])
 
     def post_branch(self, rule):
@@ -92,5 +98,6 @@ class Transformer:
         Args:
             rule (set): the rule being applied
         """
-        self.graph.add_edge(rule[1],self.act_edge.get_end(),None)
+        self.act_edge.get_end().set_bracket(rule[1])
+        # self.graph.add_edge(rule[1],self.act_edge.get_end(),None)
         self.relabel([rule[0],-1,-1])

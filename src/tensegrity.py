@@ -10,8 +10,9 @@ from l_system import LSystem
 from strut import Strut
 
 MAX_INT=2147483647
-# DEF_L_SYSTEM={"1":"2{1}5", "2":"4{1}1", "3":"4", "4":"3{4}4", "5":"3"}
 DEF_L_SYSTEM={1:[2,1,5],2:[4,1,1],3:[4,-1,-1],4:[3,4,4],5:[3,-1,-1]}
+#DEF_L_SYSTEM={1:[1,2,1],2:[4,1,1],3:[4,-1,-1],4:[3,4,4],5:[3,-1,-1]}
+# DEF_L_SYSTEM={1:[3,4,4],2:[-1,2,2],3:[4,-1,-1],4:[-1,-1,4],5:[5,-1,-1]}
 
 class Tensegrity:
     """Tensegrity module for the generation of complex tensegrity structures."""
@@ -382,7 +383,7 @@ class Tensegrity:
             num (int): number of desired struts
         """
         if self.get_l_system().rule_dict!=def_l and len(self.struts)==num and made:
-            self.comment+="\n// Rules:"
+            self.comment+="\n// Rules: " + str(self.get_l_system().rule_dict)
             com_str=""
             x:Strut
             for x in self.struts:
@@ -393,4 +394,4 @@ class Tensegrity:
             com_str+=f"\n// {len(self.struts)}"
             # print (len(self.struts))
             self.comment+=f"{com_str}"
-            self.graph.draw_graph(graph_num,self.comment)
+            self.graph.draw_graph(graph_num,self.comment,self.struts)

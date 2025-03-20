@@ -13,6 +13,7 @@ class Node:
         self.adjacent=[]
         self.pair:Node=None
         self.el_num=None
+        self.my_pairs=[]
         self.other=None
 
     def set_label(self, new_label):
@@ -108,17 +109,20 @@ class Node:
         """
         return self.pair
 
-    def unset_other(self):
-        """Sets a node's linked pair to None"""
-        self.pair=None
-
     def set_other(self, other):
         """Set a node's linked pair to an indicated other node
 
         Args:
             other (node): the node to be set as the linked pair
         """
-        if self.pair is not None:
-            self.pair.unset_other()
         self.pair=other
-        
+
+    def unpair(self):
+        """Unpair a node from it's self.pair if it exists
+        """
+        if self.pair is not None:
+            self.pair.set_other(None)
+        self.pair=None
+
+    def __lt__(self, other):
+        return int(self.get_label()) < int(other.get_label())
